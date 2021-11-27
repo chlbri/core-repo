@@ -1,155 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ArrayCRUD_DB = exports.inStreamSearchAdapter = exports.inStreamSearchAdapterKey = void 0;
+exports.ArrayCRUD_DB = void 0;
 const core_promises_1 = require("core-promises");
-const lite_1 = require("dequal/lite");
 const nanoid_1 = require("nanoid");
 const immer_1 = require("immer");
-const data_1 = require("../functions/data");
-function inStreamSearchAdapterKey(op) {
-    // if (!op) return () => true;
-    const keys = Object.keys(op);
-    if (keys.every(key => !key.includes('$'))) {
-        return (arg) => {
-            if (typeof arg === 'string' ||
-                typeof arg === 'number' ||
-                typeof arg === 'bigint' ||
-                typeof arg === 'boolean' ||
-                typeof arg === 'undefined' ||
-                Object.keys(keys) === Object.keys(arg)) {
-                return (0, lite_1.dequal)(op, arg);
-            }
-            return inStreamSearchAdapter(op)(arg);
-        };
-    }
-    const entries = Object.entries(op);
-    const switcherFunctionsByKeys = ([key, value]) => {
-        switch (key) {
-            // #region Object
-            case '$exists':
-                return (arg) => {
-                    const sw = arg !== undefined && arg !== null;
-                    return value ? sw : !sw;
-                };
-            case '$eq':
-                return (arg) => (0, lite_1.dequal)(arg, value);
-            case '$ne':
-                return (arg) => !(0, lite_1.dequal)(arg, value);
-            case '$in':
-                return (arg) => {
-                    return value.some(val => (0, lite_1.dequal)(arg, val));
-                };
-            case '$nin':
-                return (arg) => {
-                    return value.every(val => !(0, lite_1.dequal)(arg, val));
-                };
-            // #endregion
-            // #region Number
-            case '$gt':
-                return (arg) => arg > value;
-            case '$gte':
-                return (arg) => arg >= value;
-            case '$lt':
-                return (arg) => arg < value;
-            case '$lte':
-                return (arg) => arg <= value;
-            case '$mod':
-                return (arg) => arg % value === 0;
-            // #endregion
-            // #region String
-            case '$cts':
-                return (arg) => arg.includes(value);
-            case '$sw':
-                return (arg) => arg.trim().startsWith(value);
-            case '$ew':
-                return (arg) => arg.trim().endsWith(value);
-            // #endregion
-            // #region Array
-            case '$all':
-                return (arg) => arg.every(val => (0, lite_1.dequal)(val, value));
-            case '$em':
-                return (arg) => arg.some(val => (0, lite_1.dequal)(val, value));
-            case '$size':
-                return (arg) => arg.length === value;
-            // #endregion
-            // #region Logicals
-            case '$and':
-                return (arg) => {
-                    const val = value;
-                    const out = val.reduce((acc, curr) => {
-                        const search = inStreamSearchAdapterKey(curr)(arg);
-                        return acc && search;
-                    }, true);
-                    return out;
-                };
-            case '$not':
-                return (arg) => {
-                    const val = value;
-                    const out = !inStreamSearchAdapterKey(val)(arg);
-                    return out;
-                };
-            case '$nor':
-                return (arg) => {
-                    const val = value;
-                    const out = val.reduce((acc, curr) => {
-                        const search = inStreamSearchAdapterKey(curr)(arg);
-                        return acc && !search;
-                    }, true);
-                    return out;
-                };
-            case '$or':
-                return (arg) => {
-                    const values = value;
-                    let out = false;
-                    for (const curr of values) {
-                        out = inStreamSearchAdapterKey(curr)(arg);
-                        if (out)
-                            break;
-                    }
-                    return out;
-                };
-            // #endregion
-            default:
-                return () => false;
-        }
-    };
-    const funcs = entries.map(switcherFunctionsByKeys);
-    const resolver = (arg) => {
-        return funcs.reduce((acc, curr) => acc && curr(arg), true);
-    };
-    return resolver;
-}
-exports.inStreamSearchAdapterKey = inStreamSearchAdapterKey;
-function inStreamSearchAdapter(filter) {
-    const funcs = [];
-    if ((0, data_1.isNotClause)(filter)) {
-        const entries = Object.entries(filter.$not);
-        entries.forEach(([key, value]) => {
-            if (value) {
-                const func = (arg) => {
-                    return inStreamSearchAdapterKey(value)(arg[key]);
-                };
-                funcs.push(func);
-            }
-        });
-    }
-    else {
-        const entries = Object.entries(filter);
-        entries.forEach(([key, value]) => {
-            if (value) {
-                const func = (arg) => {
-                    return inStreamSearchAdapterKey(value)(arg[key]);
-                };
-                funcs.push(func);
-            }
-        });
-    }
-    const resolver = (arg) => {
-        return funcs.reduce((acc, curr) => acc && curr(arg), true);
-    };
-    return resolver;
-}
-exports.inStreamSearchAdapter = inStreamSearchAdapter;
+const __1 = require("..");
 // type Permission<T extends Entity> = {
 //   permissionReader: PermissionsReaderOne<T>;
 // };
@@ -209,7 +64,7 @@ class ArrayCRUD_DB {
             return rd;
         };
         this.upsertOne = async ({ _id, data }) => {
-            const _filter = inStreamSearchAdapter({ _id, ...data });
+            const _filter = (0, __1.inStreamSearchAdapter)({ _id, ...data });
             const _exist = this._db.find(_filter);
             if (_exist) {
                 const messages = ['Already exists'];
@@ -230,7 +85,7 @@ class ArrayCRUD_DB {
                 const limit = options.limit;
                 const _inputs = inputs.slice(0, limit).map(input => {
                     var _a, _b;
-                    const _filter = inStreamSearchAdapter(input);
+                    const _filter = (0, __1.inStreamSearchAdapter)(input);
                     const _exist = (_a = this._db.find(_filter)) === null || _a === void 0 ? void 0 : _a._id;
                     if (_exist) {
                         alreadyExists.push(_exist);
@@ -256,7 +111,7 @@ class ArrayCRUD_DB {
             }
             inputs.forEach(input => {
                 var _a, _b;
-                const _filter = inStreamSearchAdapter(input);
+                const _filter = (0, __1.inStreamSearchAdapter)(input);
                 const _exist = (_a = this._db.find(_filter)) === null || _a === void 0 ? void 0 : _a._id;
                 if (_exist) {
                     alreadyExists.push(_exist);
@@ -302,7 +157,7 @@ class ArrayCRUD_DB {
             });
         };
         this.readMany = async ({ filters, options }) => {
-            const reads = this._db.filter(inStreamSearchAdapter(filters));
+            const reads = this._db.filter((0, __1.inStreamSearchAdapter)(filters));
             if (!reads.length) {
                 return new core_promises_1.ReturnData({
                     status: 515,
@@ -344,7 +199,7 @@ class ArrayCRUD_DB {
                     });
                 }
             }
-            const reads2 = reads1.filter(inStreamSearchAdapter(filters));
+            const reads2 = reads1.filter((0, __1.inStreamSearchAdapter)(filters));
             if (!reads2.length) {
                 return new core_promises_1.ReturnData({
                     status: 516,
@@ -371,7 +226,7 @@ class ArrayCRUD_DB {
             });
         };
         this.readOne = async ({ filters }) => {
-            const payload = this._db.find(inStreamSearchAdapter(filters));
+            const payload = this._db.find((0, __1.inStreamSearchAdapter)(filters));
             if (payload) {
                 return new core_promises_1.ReturnData({ status: 217, payload });
             }
@@ -388,7 +243,7 @@ class ArrayCRUD_DB {
             }
             const exists2 = this._db
                 .filter(data => data._id === _id)
-                .find(inStreamSearchAdapter(filters));
+                .find((0, __1.inStreamSearchAdapter)(filters));
             if (!exists2) {
                 return new core_promises_1.ReturnData({
                     status: 518,
@@ -405,7 +260,7 @@ class ArrayCRUD_DB {
             return new core_promises_1.ReturnData({ status: 219, payload: this._db.length });
         };
         this.count = async ({ filters, options }) => {
-            const payload = this._db.filter(inStreamSearchAdapter(filters)).length;
+            const payload = this._db.filter((0, __1.inStreamSearchAdapter)(filters)).length;
             if (payload <= 0) {
                 return new core_promises_1.ReturnData({ status: 520, messages: ['Empty'] });
             }
@@ -448,7 +303,7 @@ class ArrayCRUD_DB {
             if (!db.length) {
                 return new core_promises_1.ReturnData({ status: 522, messages: ['Empty'] });
             }
-            const _filter = inStreamSearchAdapter(filters);
+            const _filter = (0, __1.inStreamSearchAdapter)(filters);
             const limit = options === null || options === void 0 ? void 0 : options.limit;
             const inputs = db.filter(_filter);
             const payload = inputs.slice(0, limit).map(input => input._id);
@@ -501,7 +356,7 @@ class ArrayCRUD_DB {
                     payload,
                 });
             }
-            const _filter = inStreamSearchAdapter(filters);
+            const _filter = (0, __1.inStreamSearchAdapter)(filters);
             const inputs2 = inputs1.filter(_filter);
             inputs2.length; //?
             const payload = inputs2.slice(0, limit).map(input => input._id);

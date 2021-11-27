@@ -1,4 +1,11 @@
-import type { DeepPartial, NExtract, NOmit, StringKeys } from 'core';
+import type {
+  DeepPartial,
+  NExclude,
+  NExtract,
+  NFunction,
+  NOmit,
+  StringKeys,
+} from '@core_chlbri/core';
 import {
   CLIENT_ERROR_STATUS,
   INFORMATION_STATUS,
@@ -10,11 +17,44 @@ import {
   SUCCESS_STATUS,
   TIMEOUT_ERROR_STATUS,
 } from 'core-promises';
-import { InvokeMeta, StateMachine } from 'xstate';
+import {
+  Actor,
+  BaseActionObject,
+  BaseActions,
+  Behavior,
+  EventObject,
+  InvokeCallback,
+  InvokeCreator,
+  InvokeMeta,
+  MachineConfig,
+  StateMachine,
+  StateNodeConfig,
+  StatesConfig,
+  Subscribable,
+  TransitionsConfig,
+} from 'xstate';
 import { TypeOf } from 'zod';
+import {
+  ACTIONS_CRUD,
+  STATES_CRUD,
+  STATES_FINAL,
+} from '../constants/strings';
 import { Entity, WithId, WithoutId, WithoutTimeStamps } from '../entities';
-import { stateSchema } from '../schemas/strings/machines';
+import {
+  stateSchemaCRUD,
+  statesCommonSchemaCRUD,
+} from '../schemas/strings/machines';
 import type { DSO } from './dso';
+import {
+  ClientErrorGuard,
+  InformationFunction,
+  InformationGuard,
+  PermissionErrorGuard,
+  RedirectGuard,
+  ServerErrorGuard,
+  SuccessGuard,
+  TimeoutErrorGuard,
+} from './functions';
 
 export type PRD<T> = Promise<RD<T, Status>>;
 
@@ -68,24 +108,70 @@ export type TC<E> = {
   notPermitteds?: string[];
 };
 
-export type States = TypeOf<typeof stateSchema>;
+export type States = TypeOf<typeof stateSchemaCRUD>;
 
 export type TE<E> = {
   type: 'SEND';
   data: E;
 };
 
-export type PromiseService<C = any, E = any, TF = any> = (
+export type ServiceReturn<R = any> = NOmit<TC<R>, 'iterator'>;
+
+export type SR<R = any> = ServiceReturn<R>;
+
+export type StateValueCRUDF = NExclude<
+  StateValueCRUD,
+  'idle' | 'pending' | 'checking'
+>;
+
+export type FinalStates = Record<
+  StateValueCRUDF,
+  {
+    entry: typeof ACTIONS_CRUD.object.increment;
+    type: 'final';
+  }
+>;
+
+export type NExtractSV<S extends StateValueCRUDF> = NExtract<
+  StateValueCRUDF,
+  S
+>;
+
+export type GuardF<S extends StateValueCRUDF, F extends NFunction> = {
+  [key in S]: F;
+};
+
+export type Guards<T> = GuardF<'information', InformationGuard<T>> &
+  GuardF<'success', SuccessGuard<T>> &
+  GuardF<'redirect', RedirectGuard<T>> &
+  GuardF<'client', ClientErrorGuard> &
+  GuardF<'server', ServerErrorGuard> &
+  GuardF<'permission', PermissionErrorGuard<T>> &
+  GuardF<'timeout', TimeoutErrorGuard>;
+
+// PromiseLike<TFinalContext> | StateMachine<TFinalContext, any, any> | Subscribable<EventObject> | InvokeCallback<any, TEvent> | Behavior<any>
+
+export type ServiceCRUD<C = any, E = any> = (
   context: TC<C>,
   event: TE<E>,
   meta: InvokeMeta,
-) => PromiseLike<NOmit<TC<TF>, 'iterator'>>;
+) =>
+  | Promise<SR<C>>
+  | StateMachine<SR<C>, any, any>
+  | Subscribable<EventObject>
+  | InvokeCallback<TE<E>, TE<E>>
+  | Behavior<any>;
 
-export type StateCRUDArgs<C = any, E = any, TF = any> = {
-  src: PromiseService<C, E, TF>;
+export type StateCRUDArgs<C = any, E = any> = {
+  src: ServiceCRUD<C, E>;
   id?: string;
   status?: Status;
+  // guards:Guards<TC<C>>
 };
+
+export type StateValueCRUD = TypeOf<typeof stateSchemaCRUD>;
+
+export type StateCommonCRUD = TypeOf<typeof statesCommonSchemaCRUD>;
 
 export type AbsoluteUdefiny<T extends Record<string, any>> = {
   [key in keyof T]: undefined;
@@ -101,36 +187,36 @@ export type TT<E> =
         AbsoluteUdefiny<Pick<TC<E>, 'notPermitteds'>>;
     }
   | {
-      value: NExtract<TypeOf<typeof stateSchema>, 'success'>;
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'success'>;
       context: TC<E> &
         ObjectStatus<SuccessStatus> &
         Required<Pick<TC<E>, 'payload'>> &
         AbsoluteUdefiny<Pick<TC<E>, 'notPermitteds' | 'messages'>>;
     }
   | {
-      value: NExtract<TypeOf<typeof stateSchema>, 'redirect'>;
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'redirect'>;
       context: TC<E> &
         ObjectStatus<RedirectStatus> &
         AbsoluteUdefiny<Pick<TC<E>, 'notPermitteds'>>;
     }
   | {
-      value: NExtract<TypeOf<typeof stateSchema>, 'client'>;
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'client'>;
       context: TC<E> &
         ObjectStatus<ClientErrorStatus> &
         AbsoluteUdefiny<Pick<TC<E>, 'payload' | 'notPermitteds'>>;
     }
   | {
-      value: NExtract<TypeOf<typeof stateSchema>, 'server'>;
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'server'>;
       context: TC<E> &
         ObjectStatus<ServerErrorStatus> &
         AbsoluteUdefiny<Pick<TC<E>, 'payload' | 'notPermitteds'>>;
     }
   | {
-      value: NExtract<TypeOf<typeof stateSchema>, 'permission'>;
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'permission'>;
       context: TC<E> & ObjectStatus<PermissionErrorStatus>;
     }
   | {
-      value: NExtract<TypeOf<typeof stateSchema>, 'timeout'>;
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'timeout'>;
       context: TC<E> &
         ObjectStatus<InformationStatus> &
         AbsoluteUdefiny<
@@ -154,14 +240,45 @@ const test1: Test1 = {
 //     context: TContext;
 // }, _TAction extends ActionObject<TContext, TEvent>
 
-export type StateCRUD<C, E = Record<string, unknown>> = StateMachine<
-  TC<C>,
+export type REqREsp<C, E = any> = { response: C; request: E };
+
+export type StateMachineCRUD<C, E = any> = StateMachine<
+  TC<{ response: C; request: E }>,
   any,
   TE<E>,
-  TT<C>
+  TT<{ response: C; request: E }>
 >;
 
-export type CreateMany<E = any> = StateCRUD<
+export type DeepOmit<T, K extends string> = T extends Record<
+  string,
+  infer U
+>
+  ? U extends Record<string, any>
+    ? DeepOmit<U, K>
+    : Omit<T, K>
+  : never;
+
+type Test3 = { [key: string]: any; on: never };
+
+const test3: Test3 = {
+  on: (() => {
+    throw undefined;
+  })(),
+};
+
+interface Test4 {
+  [key: string]: any;
+  on?: undefined;
+}
+
+export type TypeState =
+  | 'atomic'
+  | 'compound'
+  | 'parallel'
+  | 'final'
+  | 'history';
+
+export type CreateMany<E = any> = StateMachineCRUD<
   string[],
   {
     data: WT<WO<E>>[];
@@ -169,7 +286,7 @@ export type CreateMany<E = any> = StateCRUD<
   }
 >;
 
-export type CreateOne<E = any> = StateCRUD<
+export type CreateOne<E = any> = StateMachineCRUD<
   string,
   {
     data: WT<WO<E>>;
@@ -177,7 +294,7 @@ export type CreateOne<E = any> = StateCRUD<
   }
 >;
 
-export type UpsertOne<E = any> = StateCRUD<
+export type UpsertOne<E = any> = StateMachineCRUD<
   string,
   {
     _id?: string;
@@ -186,7 +303,7 @@ export type UpsertOne<E = any> = StateCRUD<
   }
 >;
 
-export type UpsertMany<E = any> = StateCRUD<
+export type UpsertMany<E = any> = StateMachineCRUD<
   string[],
   {
     upserts: { _id?: string; data: WO<E> }[];
@@ -198,27 +315,27 @@ export type UpsertMany<E = any> = StateCRUD<
 
 // #region Read
 
-export type ReadAll<E = any> = StateCRUD<
+export type ReadAll<E = any> = StateMachineCRUD<
   WI<E>[],
   { options?: QueryOptions }
 >;
 
-export type ReadMany<E = any> = StateCRUD<
+export type ReadMany<E = any> = StateMachineCRUD<
   WI<E>[],
   { filters: DSO<E>; options?: QueryOptions }
 >;
 
-export type ReadManyByIds<E = any> = StateCRUD<
+export type ReadManyByIds<E = any> = StateMachineCRUD<
   WI<E>[],
   { ids: string[]; filters?: DSO<E>; options?: QueryOptions }
 >;
 
-export type ReadOne<E = any> = StateCRUD<
+export type ReadOne<E = any> = StateMachineCRUD<
   WI<E>,
   { filters: DSO<E>; options?: NOmit<QueryOptions, 'limit'> }
 >;
 
-export type ReadOneById<E = any> = StateCRUD<
+export type ReadOneById<E = any> = StateMachineCRUD<
   WI<E>,
   { _id: string; filters: DSO<E>; options?: NOmit<QueryOptions, 'limit'> }
 >;
@@ -227,9 +344,9 @@ export type ReadOneById<E = any> = StateCRUD<
 
 // #region Count
 
-export type CountAll = StateCRUD<number>;
+export type CountAll = StateMachineCRUD<number>;
 
-export type Count<E = any> = StateCRUD<
+export type Count<E = any> = StateMachineCRUD<
   number,
   { filters: DSO<E>; options?: QueryOptions }
 >;
@@ -238,7 +355,7 @@ export type Count<E = any> = StateCRUD<
 
 // #region Update
 
-export type UpdateAll<E = any> = StateCRUD<
+export type UpdateAll<E = any> = StateMachineCRUD<
   string[],
   {
     data: Omit<WO<E>, '_updatedAt'>;
@@ -246,7 +363,7 @@ export type UpdateAll<E = any> = StateCRUD<
   }
 >;
 
-export type UpdateMany<E = any> = StateCRUD<
+export type UpdateMany<E = any> = StateMachineCRUD<
   string[],
   {
     filters: DSO<E>;
@@ -255,7 +372,7 @@ export type UpdateMany<E = any> = StateCRUD<
   }
 >;
 
-export type UpdateManyByIds<E = any> = StateCRUD<
+export type UpdateManyByIds<E = any> = StateMachineCRUD<
   string[],
   {
     ids: string[];
@@ -265,7 +382,7 @@ export type UpdateManyByIds<E = any> = StateCRUD<
   }
 >;
 
-export type UpdateOne<E = any> = StateCRUD<
+export type UpdateOne<E = any> = StateMachineCRUD<
   string,
   {
     filters: DSO<E>;
@@ -274,7 +391,7 @@ export type UpdateOne<E = any> = StateCRUD<
   }
 >;
 
-export type UpdateOneById<E = any> = StateCRUD<
+export type UpdateOneById<E = any> = StateMachineCRUD<
   string[],
   {
     id: string;
@@ -287,7 +404,7 @@ export type UpdateOneById<E = any> = StateCRUD<
 
 // #region Set
 
-export type SetAll<E = any> = StateCRUD<
+export type SetAll<E = any> = StateMachineCRUD<
   string[],
   {
     data: Omit<WO<E>, '_updatedAt'>;
@@ -295,7 +412,7 @@ export type SetAll<E = any> = StateCRUD<
   }
 >;
 
-export type SetMany<E = any> = StateCRUD<
+export type SetMany<E = any> = StateMachineCRUD<
   string[],
   {
     filters: DSO<E>;
@@ -304,7 +421,7 @@ export type SetMany<E = any> = StateCRUD<
   }
 >;
 
-export type SetManyByIds<E = any> = StateCRUD<
+export type SetManyByIds<E = any> = StateMachineCRUD<
   string[],
   {
     ids: string[];
@@ -314,7 +431,7 @@ export type SetManyByIds<E = any> = StateCRUD<
   }
 >;
 
-export type SetOne<E = any> = StateCRUD<
+export type SetOne<E = any> = StateMachineCRUD<
   string,
   {
     filters: DSO<E>;
@@ -323,7 +440,7 @@ export type SetOne<E = any> = StateCRUD<
   }
 >;
 
-export type SetOneById<E = any> = StateCRUD<
+export type SetOneById<E = any> = StateMachineCRUD<
   string[],
   {
     id: string;
@@ -337,14 +454,14 @@ export type SetOneById<E = any> = StateCRUD<
 
 // #region Delete
 
-export type DeleteAll = StateCRUD<
+export type DeleteAll = StateMachineCRUD<
   string[],
   {
     options?: QueryOptions;
   }
 >;
 
-export type DeleteMany<E = any> = StateCRUD<
+export type DeleteMany<E = any> = StateMachineCRUD<
   string[],
   {
     filters: DSO<E>;
@@ -352,7 +469,7 @@ export type DeleteMany<E = any> = StateCRUD<
   }
 >;
 
-export type DeleteManyByIds<E = any> = StateCRUD<
+export type DeleteManyByIds<E = any> = StateMachineCRUD<
   string[],
   {
     ids: string[];
@@ -361,7 +478,7 @@ export type DeleteManyByIds<E = any> = StateCRUD<
   }
 >;
 
-export type DeleteOne<E = any> = StateCRUD<
+export type DeleteOne<E = any> = StateMachineCRUD<
   string,
   {
     filters: DSO<E>;
@@ -369,7 +486,7 @@ export type DeleteOne<E = any> = StateCRUD<
   }
 >;
 
-export type DeleteOneById<E = any> = StateCRUD<
+export type DeleteOneById<E = any> = StateMachineCRUD<
   string[],
   {
     id: string;
@@ -382,14 +499,14 @@ export type DeleteOneById<E = any> = StateCRUD<
 
 // #region Remove
 
-export type RemoveAll = StateCRUD<
+export type RemoveAll = StateMachineCRUD<
   string[],
   {
     options?: QueryOptions;
   }
 >;
 
-export type RemoveMany<E = any> = StateCRUD<
+export type RemoveMany<E = any> = StateMachineCRUD<
   string[],
   {
     filters: DSO<E>;
@@ -397,7 +514,7 @@ export type RemoveMany<E = any> = StateCRUD<
   }
 >;
 
-export type RemoveManyByIds<E = any> = StateCRUD<
+export type RemoveManyByIds<E = any> = StateMachineCRUD<
   string[],
   {
     ids: string[];
@@ -406,14 +523,14 @@ export type RemoveManyByIds<E = any> = StateCRUD<
   }
 >;
 
-export type RemoveOne<E = any> = StateCRUD<
+export type RemoveOne<E = any> = StateMachineCRUD<
   string,
   {
     filters: DSO<E>;
     options?: NOmit<QueryOptions, 'limit'>;
   }
 >;
-export type RemoveOneById<E = any> = StateCRUD<
+export type RemoveOneById<E = any> = StateMachineCRUD<
   string[],
   {
     id: string;
@@ -426,14 +543,14 @@ export type RemoveOneById<E = any> = StateCRUD<
 
 // #region Retrieve
 
-export type RetrieveAll = StateCRUD<
+export type RetrieveAll = StateMachineCRUD<
   string[],
   {
     options?: QueryOptions;
   }
 >;
 
-export type RetrieveMany<E = any> = StateCRUD<
+export type RetrieveMany<E = any> = StateMachineCRUD<
   string[],
   {
     filters: DSO<E>;
@@ -441,7 +558,7 @@ export type RetrieveMany<E = any> = StateCRUD<
   }
 >;
 
-export type RetrieveManyByIds<E = any> = StateCRUD<
+export type RetrieveManyByIds<E = any> = StateMachineCRUD<
   string[],
   {
     ids: string[];
@@ -450,7 +567,7 @@ export type RetrieveManyByIds<E = any> = StateCRUD<
   }
 >;
 
-export type RetrieveOne<E = any> = StateCRUD<
+export type RetrieveOne<E = any> = StateMachineCRUD<
   string,
   {
     filters: DSO<E>;
@@ -458,7 +575,7 @@ export type RetrieveOne<E = any> = StateCRUD<
   }
 >;
 
-export type RetrieveOneById<E = any> = StateCRUD<
+export type RetrieveOneById<E = any> = StateMachineCRUD<
   string[],
   {
     id: string;

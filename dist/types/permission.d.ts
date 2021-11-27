@@ -2,7 +2,7 @@ import { StringKeyAndValues, UnionToIntersection } from 'core';
 import { TypeOf } from 'zod';
 import { Entity } from '../entities';
 import { WithoutId } from './../entities';
-import { PERMISSIONS_STRINGS } from './../schemas/strings';
+import { PERMISSIONS_STRINGS } from '../schemas/strings/strings';
 import { DSO } from './dso';
 export declare type GetPermissions<T> = (filters: DSO<T>) => string[];
 declare type _Keys = TypeOf<typeof PERMISSIONS_STRINGS>[number];

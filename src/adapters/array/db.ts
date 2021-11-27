@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ReturnData } from 'core-promises';
 import { dequal } from 'dequal/lite';
 import { nanoid } from 'nanoid';
@@ -15,6 +16,7 @@ import {
   DeleteManyByIds,
   DeleteOne,
   DeleteOneById,
+  ServiceCRUD,
   ReadAll,
   ReadMany,
   ReadManyByIds,
@@ -30,11 +32,14 @@ import {
   RetrieveManyByIds,
   RetrieveOne,
   RetrieveOneById,
+  ServiceReturn,
+  SR,
   SetAll,
   SetMany,
   SetManyByIds,
   SetOne,
   SetOneById,
+  TC,
   UpdateAll,
   UpdateMany,
   UpdateManyByIds,
@@ -45,23 +50,29 @@ import {
   WI,
   WO,
 } from '../../types/_crud';
-import type { DataSearchOperations, SearchOperation } from '../../types/dso';
+import type {
+  DataSearchOperations,
+  SearchOperation,
+} from '../../types/dso';
 import { Entity } from '../../entities';
 import { inStreamSearchAdapter } from '..';
-
+import { createCRUDMAchine } from '../../functions/machine';
+import { NOmit } from '@core_chlbri/core';
+import { createMachine } from 'xstate';
+import { STATES_COMMON_CRUD, STATES_CRUD } from '../../constants/strings';
 
 // type Permission<T extends Entity> = {
 //   permissionReader: PermissionsReaderOne<T>;
 // };
 
-export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
+export class ArrayCRUD_DB<E extends Entity> implements CRUD<E> {
   /* , Permission<T> */
   constructor(
-    private _db: WI<T>[],
+    private _db: WI<E>[],
     private permissions: CollectionPermissions,
   ) {}
 
-  __update = (payload: string[], update: WO<T>) => {
+  __update = (payload: string[], update: WO<E>) => {
     const __db = produce([...this._db], draft => {
       payload.forEach(id => {
         const index = draft.findIndex((data: any) => data._id === id);
@@ -93,62 +104,107 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
 
   // #region Create
 
-  createMany: CreateMany<T> = async ({ data: datas, options }) => {
-    const inputs = datas.map(data => ({
-      _id: nanoid(),
-      ...data,
-    })) as WI<T>[];
-    if (options && options.limit && options.limit < datas.length) {
-      const limit = options.limit;
-      const _inputs = inputs.slice(0, limit);
-      this._db.push(..._inputs);
-      const payload = _inputs.map(input => input._id);
-      const messages = ['Limit exceeded'];
-      const rd = new ReturnData({ status: 110, payload, messages });
+  createMany: CreateMany<E> = createCRUDMAchine({
+    src: async (_, { data: { data: datas, options } }) => {
+      const inputs = datas.map(data => ({
+        _id: nanoid(),
+        ...data,
+      })) as WI<E>[];
+      let rd: NOmit<TC<string[]>, 'iterator'>;
+      if (options && options.limit && options.limit < datas.length) {
+        const limit = options.limit;
+        const _inputs = inputs.slice(0, limit);
+        this._db.push(..._inputs);
+        const payload = _inputs.map(input => input._id);
+        const messages = ['Limit exceeded'];
+        rd = { status: 110, payload, messages };
+        return rd;
+      }
+
+      this._db.push(...inputs);
+      const payload = inputs.map(input => input._id) as string[];
+      rd = { status: 210, payload };
       return rd;
-    }
+    },
+    status: 410,
+  });
 
-    this._db.push(...inputs);
-    const payload = inputs.map(input => input._id) as string[];
-    const rd = new ReturnData({ status: 210, payload });
-    return rd;
-  };
+  createOne: CreateOne<E> = createCRUDMAchine({
+    src: async (_, { data: { data } }) => {
+      const input = {
+        _id: nanoid(),
+        ...data,
+      } as WI<E>;
 
-  createOne: CreateOne<T> = async ({ data }) => {
-    const input = {
-      _id: nanoid(),
-      ...data,
-    } as WI<T>;
+      this._db.push(input);
+      const payload = input._id;
+      const rd: SR<string> = {
+        status: 211,
+        payload,
+      };
+      return rd;
+    },
+    status: 411,
+  });
 
-    this._db.push(input);
-    const payload = input._id;
-    const rd = new ReturnData({ status: 211, payload });
-    return rd;
-  };
+  upsertOne: UpsertOne<E> = createCRUDMAchine({
+    src: async (_, { data: { _id, data } }) => {
+      const _filter = inStreamSearchAdapter({ _id, ...data } as any);
+      const _exist = this._db.find(_filter);
+      let out: SR<string>;
+      if (_exist) {
+        const messages = ['Already exists'];
+        out = { status: 312, payload: _id, messages };
+      } else {
+        const input = {
+          _id: nanoid(),
+          ...data,
+        } as WI<E>;
+        this._db.push(input);
+        out = { status: 212, payload: _id };
+      }
+      return out;
+    },
+    status: 412,
+  });
 
-  upsertOne: UpsertOne<T> = async ({ _id, data }) => {
-    const _filter = inStreamSearchAdapter({ _id, ...data } as any);
-    const _exist = this._db.find(_filter);
-    if (_exist) {
-      const messages = ['Already exists'];
-      return new ReturnData({ status: 312, payload: _id, messages });
-    } else {
-      this._db.push({ _id: _id ?? nanoid(), ...data });
-      return new ReturnData({ status: 212, payload: _id });
-    }
-  };
+  upsertMany: UpsertMany<E> = createCRUDMAchine({
+    src: async (_, { data: { upserts, options } }) => {
+      const inputs = upserts.map(({ _id, data }) => ({
+        _id,
+        ...data,
+      })) as WI<E>[];
+      const alreadyExists: string[] = [];
+      if (options && options.limit && options.limit < upserts.length) {
+        const limit = options.limit;
+        const _inputs = inputs.slice(0, limit).map(input => {
+          const _filter = inStreamSearchAdapter(input as any);
+          const _exist = this._db.find(_filter)?._id;
+          if (_exist) {
+            alreadyExists.push(_exist);
+          } else {
+            this._db.push({ ...input, _id: input._id ?? nanoid() });
+          }
+          return input;
+        });
+        if (alreadyExists.length > 0) {
+          return {
+            status: 313,
+            payload: _inputs.map(input => input._id),
+            messages: [`${alreadyExists.length} already exist`],
+          };
+        } else {
+          return {
+            status: 113,
+            payload: _inputs.map(input => input._id),
+          };
+        }
+      }
 
-  upsertMany: UpsertMany<T> = async ({ upserts, options }) => {
-    const inputs = upserts.map(({ _id, data }) => ({
-      _id,
-      ...data,
-    })) as WI<T>[];
-    const alreadyExists: string[] = [];
-    if (options && options.limit && options.limit < upserts.length) {
-      const limit = options.limit;
-      const _inputs = inputs.slice(0, limit).map(input => {
+      inputs.forEach(input => {
         const _filter = inStreamSearchAdapter(input as any);
         const _exist = this._db.find(_filter)?._id;
+
         if (_exist) {
           alreadyExists.push(_exist);
         } else {
@@ -156,92 +212,162 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
         }
         return input;
       });
+
       if (alreadyExists.length > 0) {
-        return new ReturnData({
+        return {
           status: 313,
-          payload: _inputs.map(input => input._id),
+          payload: inputs.map(input => input._id),
           messages: [`${alreadyExists.length} already exist`],
-        });
+        };
       } else {
-        return new ReturnData({
-          status: 113,
-          payload: _inputs.map(input => input._id),
-        });
+        return {
+          status: 213,
+          payload: inputs.map(input => input._id),
+        };
       }
-    }
-
-    inputs.forEach(input => {
-      const _filter = inStreamSearchAdapter(input as any);
-      const _exist = this._db.find(_filter)?._id;
-
-      if (_exist) {
-        alreadyExists.push(_exist);
-      } else {
-        this._db.push({ ...input, _id: input._id ?? nanoid() });
-      }
-      return input;
-    });
-
-    if (alreadyExists.length > 0) {
-      return new ReturnData({
-        status: 313,
-        payload: inputs.map(input => input._id),
-        messages: [`${alreadyExists.length} already exist`],
-      });
-    } else {
-      return new ReturnData({
-        status: 213,
-        payload: inputs.map(input => input._id),
-      });
-    }
-  };
+    },
+    status: 413,
+  });
 
   // #endregion
 
   // #region Read
 
-  readAll: ReadAll<T> = async options => {
-    if (options && options.limit && options.limit < this._db.length) {
-      return new ReturnData({
-        status: 314,
-        payload: this._db.slice(0, options.limit),
-        messages: ['Limit Reached'],
-      });
-    }
-    if (!this._db.length) {
-      return new ReturnData({
-        status: 514,
-        messages: ['Empty'],
-      });
-    }
-    return new ReturnData({
-      status: 214,
-      payload: this._db.slice(0, options?.limit),
-    });
-  };
+  readAll: ReadAll<E> = createCRUDMAchine({
+    src: (_, { data: { options } }) =>
+      createMachine(
+        {
+          id: 'readAll',
+          initial: 'idle',
+          states: {
+            idle: {
+              always: [
+                { cond: () => this._db.length < 0, target: 'empty' },
+                { target: 'check_limit' },
+              ],
+            },
+            empty: {
+              type: 'final',
+              data: {
+                status: 514,
+                messages: ['Empty'],
+              },
+            },
+            check_limit: {
+              always: [
+                { cond: () => !!options?.limit, target: 'limit' },
+                { target: 'nolimit' },
+              ],
+            },
+            limit: {
+              initial: 'idle',
+              states: {
+                idle: {
+                  always: [
+                    {
+                      cond: () =>
+                        !!options?.limit &&
+                        options.limit < this._db.length,
+                      target: 'limit_reached',
+                    },
+                    { target: '#readAll.nolimit' },
+                  ],
+                },
+                limit_reached: {
+                  type: 'final',
+                  data: {
+                    status: 314,
+                    payload: this._db.slice(0, options?.limit),
+                    messages: ['Limit Reached'],
+                  },
+                },
+              },
+            },
+            nolimit: {
+              type: 'final',
+              data: {
+                status: 214,
+                payload: this._db,
+              },
+            },
+          },
+        },
+        {},
+      ),
+  });
 
-  readMany: ReadMany<T> = async ({ filters, options }) => {
-    const reads = this._db.filter(inStreamSearchAdapter(filters));
-    if (!reads.length) {
-      return new ReturnData({
-        status: 515,
-        messages: ['Empty'],
-      });
-    }
-    if (options && options.limit && options.limit < reads.length) {
-      return new ReturnData({
-        status: 115,
-        payload: reads.slice(0, options.limit),
-        messages: ['Limit Reached'],
-      });
-    }
-    return new ReturnData({
-      status: 215,
-      payload: reads,
-    });
-  };
+  readMany: ReadMany<E> = createMachine(
+    {
+      id: 'readAll',
+      initial: STATES_CRUD.object.idle,
+      context: { iterator: 0, status: 415 } as TC<WI<E>[]>,
+      states: {
+        [STATES_CRUD.object.idle]: {
+          on: {
+            SEND:{
+              
+            }
+          },
+          always: [
+            {
+              cond: () => this._db.length < 0,
+              target: STATES_COMMON_CRUD.object.empty_db,
+            },
+            { target: STATES_COMMON_CRUD.object.check_options_limit },
+          ],
+        },
+        [STATES_COMMON_CRUD.object.empty_db]: {
+          type: 'final',
+          data: {
+            status: 515,
+            messages: [STATES_COMMON_CRUD.object.empty_db],
+          },
+        },
+        [STATES_COMMON_CRUD.object.check_options_limit]: {
+          always: [
+            {
+              cond: () => !!options?.limit,
+              target: STATES_COMMON_CRUD.object.options_limit,
+            },
+            { target: STATES_COMMON_CRUD.object.no_options_limit },
+          ],
+        },
+        [STATES_COMMON_CRUD.object.no_options_limit]: {
+          initial: STATES_CRUD.object.idle,
+          states: {
+            idle: {
+              always: [
+                {
+                  cond: () =>
+                    !!options?.limit && options.limit < this._db.length,
+                  target: STATES_COMMON_CRUD.object.limit_reached,
+                },
+                { target: '#readAll.nolimit' },
+              ],
+            },
+            [STATES_COMMON_CRUD.object.limit_reached]: {
+              type: 'final',
+              data: {
+                status: 314,
+                payload: this._db.slice(0, options?.limit),
+                messages: [STATES_COMMON_CRUD.object.limit_reached],
+              },
+            },
+          },
+        },
+        [STATES_COMMON_CRUD.object.options_limit]: {
+          type: 'final',
+          data: {
+            status: 214,
+            payload: this._db,
+          },
+        },
+      },
+    },
+    {},
+  );
 
-  readManyByIds: ReadManyByIds<T> = async ({ ids, filters, options }) => {
+  readManyByIds: ReadManyByIds<E> = async ({ ids, filters, options }) => {
     const reads1 = this._db.filter(data => ids.includes(data._id));
     if (!reads1.length) {
       return new ReturnData({
@@ -290,7 +416,7 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
     });
   };
 
-  readOne: ReadOne<T> = async ({ filters }) => {
+  readOne: ReadOne<E> = async ({ filters }) => {
     const payload = this._db.find(inStreamSearchAdapter(filters));
     if (payload) {
       return new ReturnData({ status: 217, payload });
@@ -298,7 +424,7 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
     return new ReturnData({ status: 517, messages: ['NotFound'] });
   };
 
-  readOneById: ReadOneById<T> = async ({ _id, filters }) => {
+  readOneById: ReadOneById<E> = async ({ _id, filters }) => {
     const exits1 = this._db.find(data => data._id === _id);
     if (!filters) {
       if (!exits1) {
@@ -326,7 +452,7 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
     return new ReturnData({ status: 219, payload: this._db.length });
   };
 
-  count: Count<T> = async ({ filters, options }) => {
+  count: Count<E> = async ({ filters, options }) => {
     const payload = this._db.filter(inStreamSearchAdapter(filters)).length;
     if (payload <= 0) {
       return new ReturnData({ status: 520, messages: ['Empty'] });
@@ -344,7 +470,7 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
 
   // #endregion
 
-  updateAll: UpdateAll<T> = async ({ data, options }) => {
+  updateAll: UpdateAll<E> = async ({ data, options }) => {
     const db = [...this._db];
     if (!db.length) {
       return new ReturnData({ status: 521, messages: ['Empty'] });
@@ -368,7 +494,7 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
     });
   };
 
-  updateMany: UpdateMany<T> = async ({ filters, data, options }) => {
+  updateMany: UpdateMany<E> = async ({ filters, data, options }) => {
     const db = [...this._db];
     if (!db.length) {
       return new ReturnData({ status: 522, messages: ['Empty'] });
@@ -400,7 +526,7 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
     });
   };
 
-  updateManyByIds: UpdateManyByIds<T> = async ({
+  updateManyByIds: UpdateManyByIds<E> = async ({
     ids,
     filters,
     data,
@@ -473,70 +599,47 @@ export class ArrayCRUD_DB<T extends Entity> implements CRUD<T> {
       payload,
     });
   };
-  updateOne: UpdateOne<T> = async () => {
-    throw undefined;
-  };
-  updateOneById: UpdateOneById<T> = async () => {
-    throw undefined;
-  };
-  setAll: SetAll<T> = async () => {
-    throw undefined;
-  };
-  setMany: SetMany<T> = async () => {
-    throw undefined;
-  };
-  setManyByIds: SetManyByIds<T> = async () => {
-    throw undefined;
-  };
-  setOne: SetOne<T> = async () => {
-    throw undefined;
-  };
-  setOneById: SetOneById<T> = async () => {
-    throw undefined;
-  };
-  deleteAll: DeleteAll = async () => {
-    throw undefined;
-  };
-  deleteMany: DeleteMany<T> = async () => {
-    throw undefined;
-  };
-  deleteManyByIds: DeleteManyByIds<T> = async () => {
-    throw undefined;
-  };
-  deleteOne: DeleteOne<T> = async () => {
-    throw undefined;
-  };
-  deleteOneById: DeleteOneById<T> = async () => {
-    throw undefined;
-  };
-  retrieveAll: RetrieveAll = async () => {
-    throw undefined;
-  };
-  retrieveMany: RetrieveMany<T> = async () => {
-    throw undefined;
-  };
-  retrieveManyByIds: RetrieveManyByIds<T> = async () => {
-    throw undefined;
-  };
-  retrieveOne: RetrieveOne<T> = async () => {
-    throw undefined;
-  };
-  retrieveOneById: RetrieveOneById<T> = async () => {
-    throw undefined;
-  };
-  removeAll: RemoveAll = async () => {
-    throw undefined;
-  };
-  removeMany: RemoveMany<T> = async () => {
-    throw undefined;
-  };
-  removeManyByIds: RemoveManyByIds<T> = async () => {
-    throw undefined;
-  };
-  removeOne: RemoveOne<T> = async () => {
-    throw undefined;
-  };
-  removeOneById: RemoveOneById<T> = async () => {
-    throw undefined;
-  };
+  updateOne: UpdateOne<E> = createCRUDMAchine({} as any);
+
+  updateOneById: UpdateOneById<E> = createCRUDMAchine({} as any);
+
+  setAll: SetAll<E> = createCRUDMAchine({} as any);
+
+  setMany: SetMany<E> = createCRUDMAchine({} as any);
+
+  setManyByIds: SetManyByIds<E> = createCRUDMAchine({} as any);
+
+  setOne: SetOne<E> = createCRUDMAchine({} as any);
+
+  setOneById: SetOneById<E> = createCRUDMAchine({} as any);
+
+  deleteAll: DeleteAll = createCRUDMAchine({} as any);
+
+  deleteMany: DeleteMany<E> = createCRUDMAchine({} as any);
+
+  deleteManyByIds: DeleteManyByIds<E> = createCRUDMAchine({} as any);
+
+  deleteOne: DeleteOne<E> = createCRUDMAchine({} as any);
+
+  deleteOneById: DeleteOneById<E> = createCRUDMAchine({} as any);
+
+  retrieveAll: RetrieveAll = createCRUDMAchine({} as any);
+
+  retrieveMany: RetrieveMany<E> = createCRUDMAchine({} as any);
+
+  retrieveManyByIds: RetrieveManyByIds<E> = createCRUDMAchine({} as any);
+
+  retrieveOne: RetrieveOne<E> = createCRUDMAchine({} as any);
+
+  retrieveOneById: RetrieveOneById<E> = createCRUDMAchine({} as any);
+
+  removeAll: RemoveAll = createCRUDMAchine({} as any);
+
+  removeMany: RemoveMany<E> = createCRUDMAchine({} as any);
+
+  removeManyByIds: RemoveManyByIds<E> = createCRUDMAchine({} as any);
+
+  removeOne: RemoveOne<E> = createCRUDMAchine({} as any);
+
+  removeOneById: RemoveOneById<E> = createCRUDMAchine({} as any);
 }

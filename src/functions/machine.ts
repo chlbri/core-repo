@@ -1,59 +1,37 @@
-import { NExclude } from '@core_chlbri/core';
 import { nanoid } from 'nanoid';
 import { assign, createMachine, interpret } from 'xstate';
-import { ACTIONS, STATES } from '../constants/strings';
-import { PromiseService, StateCRUD, StateCRUDArgs } from '../types/_crud';
+import { ACTIONS_CRUD, STATES_CRUD, STATES_FINAL } from '../constants/strings';
+import {
+  ServiceCRUD, StateCRUDArgs, StateMachineCRUD
+} from '../types/_crud';
 
-function writeFinalState<S extends string>(str: S) {
-  return {
-    [str]: {
-      entry: ACTIONS.object.increment,
-      type: 'final',
-    },
-  } as const;
-}
-
-
-
-export function createCRUDMAchine<C = any, E = any, TF = any>({
+export function createCRUDMAchine<C = any, E = any>({
   src,
   id = nanoid(),
   status = 400,
-}: StateCRUDArgs<C, E, TF>): StateCRUD<C, E> {
-  const finalStates = STATES.array
-    .filter(state => state !== 'idle' && state !== 'pending')
-    .map(writeFinalState)
-    .reduce((acc, curr) => {
-      Object.assign(acc, curr);
-      return acc;
-    }, {}) as {
-    [key in NExclude<typeof STATES.array[number], 'idle' | 'pending'>]: {
-      entry: typeof ACTIONS.object.increment;
-      type: 'final';
-    };
-  };
-  const machine: StateCRUD<C, E> = createMachine(
+}: StateCRUDArgs<C, E>): StateMachineCRUD<C, E> {
+  const machine: StateMachineCRUD<C, E> = createMachine(
     {
       initial: 'idle',
       id,
       context: { status, iterator: 0 },
       states: {
-        [STATES.object.idle]: {
+        [STATES_CRUD.object.idle]: {
           on: {
-            SEND: STATES.object.pending,
+            SEND: STATES_CRUD.object.pending,
           },
         },
-        [STATES.object.pending]: {
-          entry: ACTIONS.object.increment,
+        [STATES_CRUD.object.pending]: {
+          entry: ACTIONS_CRUD.object.increment,
           invoke: {
             src,
             onDone: {
-              target: STATES.object.information,
-              actions: ACTIONS.object.assign,
+              target: STATES_CRUD.object.information,
+              actions: ACTIONS_CRUD.object.assign,
             },
           },
         },
-        ...finalStates,
+        ...STATES_FINAL,
       },
     },
     {
@@ -61,10 +39,10 @@ export function createCRUDMAchine<C = any, E = any, TF = any>({
         src,
       },
       actions: {
-        [ACTIONS.object.increment]: assign({
+        [ACTIONS_CRUD.object.increment]: assign({
           iterator: ({ iterator }) => iterator + 1,
         }),
-        [ACTIONS.object.assign]: assign((ctx, { data }) => ({
+        [ACTIONS_CRUD.object.assign]: assign((ctx, { data }) => ({
           ...ctx,
           ...data,
         })),
@@ -80,7 +58,7 @@ export function createCRUDMAchine<C = any, E = any, TF = any>({
 type Test<T> = T extends Record<string, unknown> ? 1 : 0;
 type Test2 = Test<{ date: string }>;
 
-const src: PromiseService<boolean, number, any> = (c, e, f) => {
+const src: ServiceCRUD<boolean, number> = (c, e) => {
   return Promise.resolve({ status: 100, payload: true });
 };
 
@@ -97,5 +75,3 @@ service.onTransition(state => {
 service.send('SEND');
 
 // #endregion
-
-

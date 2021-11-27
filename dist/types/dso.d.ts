@@ -1,5 +1,5 @@
 import { TypeOf, ZodLiteral, ZodTuple } from 'zod';
-import { ARRAY_CLAUSES, COMMON_CLAUSES, EXIST_CLAUSES, LOGICAL_CLAUSES, NUMBER_CLAUSES, STRING_CLAUSES, TYPE_ALIASES } from '../schemas/strings';
+import { ARRAY_CLAUSES, COMMON_CLAUSES, EXIST_CLAUSES, LOGICAL_CLAUSES, NUMBER_CLAUSES, STRING_CLAUSES, TYPE_ALIASES } from '../schemas/strings/strings';
 declare type inferUnion<T extends ZodTuple> = TypeOf<T>[number];
 export declare type inferClause<T extends ZodTuple | ZodLiteral<any>, K extends T extends ZodTuple ? inferUnion<T> : TypeOf<T>, R = any> = {
     [key in K]: R;
