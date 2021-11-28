@@ -1,77 +1,62 @@
-import { nanoid } from 'nanoid';
-import { assign, createMachine, interpret } from 'xstate';
-import { ACTIONS_CRUD, STATES_CRUD, STATES_FINAL } from '../constants/strings';
+import produce from 'immer';
+import { createMachine } from 'xstate';
+import { actionSchemaCRUD, stateFSchemaCRUD } from '..';
+import { ERRORS_STRING, STATES_FINAL } from '../constants/strings';
 import {
-  ServiceCRUD, StateCRUDArgs, StateMachineCRUD
-} from '../types/_crud';
+  MachineArgsCRUD,
+  MachineConfigCRUD,
+  StateMachineCRUD,
+} from '../types/crud/config';
+import { DEFAULT_ACTIONS } from './helpers';
 
-export function createCRUDMAchine<C = any, E = any>({
-  src,
-  id = nanoid(),
-  status = 400,
-}: StateCRUDArgs<C, E>): StateMachineCRUD<C, E> {
-  const machine: StateMachineCRUD<C, E> = createMachine(
-    {
-      initial: 'idle',
-      id,
-      context: { status, iterator: 0 },
-      states: {
-        [STATES_CRUD.object.idle]: {
-          on: {
-            SEND: STATES_CRUD.object.pending,
-          },
-        },
-        [STATES_CRUD.object.pending]: {
-          entry: ACTIONS_CRUD.object.increment,
-          invoke: {
-            src,
-            onDone: {
-              target: STATES_CRUD.object.information,
-              actions: ACTIONS_CRUD.object.assign,
-            },
-          },
-        },
-        ...STATES_FINAL,
-      },
-    },
-    {
-      services: {
-        src,
-      },
-      actions: {
-        [ACTIONS_CRUD.object.increment]: assign({
-          iterator: ({ iterator }) => iterator + 1,
-        }),
-        [ACTIONS_CRUD.object.assign]: assign((ctx, { data }) => ({
-          ...ctx,
-          ...data,
-        })),
-      },
+export function createCRUDMachine<C = any, E = any>({
+  config,
+  options,
+}: MachineArgsCRUD<C, E>): StateMachineCRUD<C, E> {
+  const __states = config.states;
+  if (!__states) {
+    throw ERRORS_STRING.object.empty_states;
+  }
+  const nocheck2 = Object.keys(__states).length < 1;
+
+  if (nocheck2) {
+    throw ERRORS_STRING.object.no_machine_states;
+  }
+
+  const nocheck3 = Object.keys(__states).some(
+    key => stateFSchemaCRUD.safeParse(key).success,
+  );
+
+  if (nocheck3) {
+    throw ERRORS_STRING.object.states_internal;
+  }
+  const _config: MachineArgsCRUD<C, E>['config'] = produce(
+    config,
+    draft => {
+      if (draft.states) {
+        Object.assign(draft.states, STATES_FINAL);
+      }
     },
   );
 
-  return machine;
+  if (options) {
+    const __actions = options.actions;
+    if (__actions) {
+      const nocheck4 = Object.keys(__actions).some(
+        key => actionSchemaCRUD.safeParse(key).success,
+      );
+      if (nocheck4) throw ERRORS_STRING.object.actions_internal;
+    }
+  }
+
+  const _options: MachineArgsCRUD<C, E>['options'] = produce(
+    options,
+    draft => {
+      if (draft?.actions) {
+        Object.assign(draft.actions, DEFAULT_ACTIONS);
+      }
+    },
+  );
+
+  return createMachine(_config, _options);
 }
-
-// #region Test
-
-type Test<T> = T extends Record<string, unknown> ? 1 : 0;
-type Test2 = Test<{ date: string }>;
-
-const src: ServiceCRUD<boolean, number> = (c, e) => {
-  return Promise.resolve({ status: 100, payload: true });
-};
-
-const machine = createCRUDMAchine({
-  src,
-});
-
-const service = interpret(machine).start();
-
-service.onTransition(state => {
-  state.context; //?
-});
-
-service.send('SEND');
-
-// #endregion

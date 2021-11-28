@@ -13,9 +13,19 @@ export const stateSchemaCRUD = union([
   literal('timeout'),
 ]);
 
+export const stateFSchemaCRUD = union([
+  literal('information'),
+  literal('success'),
+  literal('redirect'),
+  literal('client'),
+  literal('server'),
+  literal('permission'),
+  literal('timeout'),
+]);
+
 export const actionSchemaCRUD = union([
-  literal('increment'),
-  literal('assign'),
+  literal('__increment'),
+  literal('__assignStatus'),
 ]);
 
 export const statesCommonSchemaCRUD = union([

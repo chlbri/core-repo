@@ -7,14 +7,22 @@ import type {
   StringKeys,
 } from '@core_chlbri/core';
 import {
+  ClientErrorStatus,
   CLIENT_ERROR_STATUS,
+  InformationStatus,
   INFORMATION_STATUS,
+  PermissionErrorStatus,
   PERMISSION_ERROR_STATUS,
   RD,
+  RedirectStatus,
   REDIRECT_STATUS,
+  ServerErrorStatus,
   SERVER_ERROR_STATUS,
+  Status,
   STATUS,
+  SuccessStatus,
   SUCCESS_STATUS,
+  TimeoutErrorStatus,
   TIMEOUT_ERROR_STATUS,
 } from 'core-promises';
 import {
@@ -56,18 +64,18 @@ import {
   TimeoutErrorGuard,
 } from './functions';
 
-export type PRD<T> = Promise<RD<T, Status>>;
+// export type PRD<T> = Promise<RD<T, Status>>;
 
 export type Projection<T> = { [key in StringKeys<T>]: boolean | 0 | 1 };
 
 export type DP<T> = DeepPartial<T>;
 
 export type WI<T> = WithId<DP<T>>;
-export type WO<T> = WithoutId<DP<T>>;
+export type WithoutDeepID<T> = WithoutId<DP<T>>;
 export type WT<T> = WithoutTimeStamps<T>;
 
-export type PRDI<T> = PRD<WI<T>>;
-export type PRDIM<T> = PRD<WI<T>[]>;
+// export type PRDI<T> = PRD<WI<T>>;
+// export type PRDIM<T> = PRD<WI<T>[]>;
 // type PRDO<T> = PRD<WO<DP<T>>>;
 // type PRDOM<T> = PRD<WO<DP<T>>[]>;
 
@@ -82,31 +90,18 @@ export type QueryOptions = {
 
 // #region Create
 
-// #region Status
-export type ClientErrorStatus = typeof CLIENT_ERROR_STATUS[number];
+export type REqResp<C, E = any> = { response: C; request: E };
 
-export type InformationStatus = typeof INFORMATION_STATUS[number];
-
-export type PermissionErrorStatus = typeof PERMISSION_ERROR_STATUS[number];
-
-export type RedirectStatus = typeof REDIRECT_STATUS[number];
-
-export type ServerErrorStatus = typeof SERVER_ERROR_STATUS[number];
-
-export type SuccessStatus = typeof SUCCESS_STATUS[number];
-
-export type TimeoutErrorStatus = typeof TIMEOUT_ERROR_STATUS[number];
-
-export type Status = typeof STATUS[number];
-// #endregion
-
-export type TC<E> = {
-  iterator: number;
+export type FlatRD<T> = {
   status: Status;
-  payload?: DeepPartial<E>;
+  payload?: DeepPartial<T>;
   messages?: string[];
   notPermitteds?: string[];
 };
+
+export type TC<C = any, E = any> = {
+  iterator: number;
+} & REqResp<FlatRD<C>, DeepPartial<E>>;
 
 export type States = TypeOf<typeof stateSchemaCRUD>;
 
@@ -115,19 +110,219 @@ export type TE<E> = {
   data: E;
 };
 
+export type TT<C = any, E = any> =
+  | {
+      value: NExtract<States, 'information'>;
+      context: TC<C, E> &
+        REqResp<
+          UndefinyFields<FlatRD<C>, 'notPermitteds'> & {
+            status: InformationStatus;
+          },
+          E
+        >;
+    }
+  | {
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'success'>;
+      context: TC<C, E> &
+        REqResp<
+          RequiredFields<
+            UndefinyFields<FlatRD<C>, 'notPermitteds'> & {
+              status: SuccessStatus;
+            },
+            'payload'
+          >,
+          E
+        >;
+    }
+  | {
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'redirect'>;
+      context: TC<C, E> &
+        REqResp<
+          UndefinyFields<FlatRD<C>, 'notPermitteds'> & {
+            status: RedirectStatus;
+          },
+          E
+        >;
+    }
+  | {
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'client'>;
+      context: TC<C, E> &
+        REqResp<
+          UndefinyFields<FlatRD<C>, 'notPermitteds' | 'payload'> & {
+            status: ClientErrorStatus;
+          },
+          E
+        >;
+    }
+  | {
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'server'>;
+      context: TC<C, E> &
+        REqResp<
+          UndefinyFields<FlatRD<C>, 'notPermitteds' | 'payload'> & {
+            status: ServerErrorStatus;
+          },
+          E
+        >;
+    }
+  | {
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'permission'>;
+      context: TC<C, E> &
+        REqResp<
+          FlatRD<C> & {
+            status: PermissionErrorStatus;
+          },
+          E
+        >;
+    }
+  | {
+      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'timeout'>;
+      context: TC<C, E> &
+        REqResp<
+          UndefinyFields<
+            FlatRD<C>,
+            'notPermitteds' | 'payload' | 'messages'
+          > & {
+            status: TimeoutErrorStatus;
+          },
+          E
+        >;
+    };
+
+// #region Test <TT>
+
+const TT_test1: TT<string, boolean> = {
+  value: 'information',
+  context: {
+    iterator: 0,
+    request: true,
+    response: {
+      status: 100,
+      payload: '',
+      messages: undefined,
+      notPermitteds: undefined,
+    },
+  },
+};
+const TT_test11: TT<string, boolean> = {
+  value: 'information',
+  context: {
+    iterator: 0,
+    request: true,
+    response: {
+      status: 100,
+      payload: '',
+      messages: ['info1', 'info2'],
+      notPermitteds: undefined,
+    },
+  },
+};
+
+const TT_test2: TT<string, boolean> = {
+  value: 'success',
+  context: {
+    iterator: 0,
+    request: true,
+    response: { status: 200, payload: '', notPermitteds: undefined },
+  },
+};
+
+const TT_test3: TT<string, boolean> = {
+  value: 'redirect',
+  context: {
+    iterator: 0,
+    request: true,
+    response: {
+      status: 300,
+      payload: undefined,
+      notPermitteds: undefined,
+      messages: ['red2'],
+    },
+  },
+};
+const TT_test4: TT<string, boolean> = {
+  value: 'client',
+  context: {
+    iterator: 0,
+    request: true,
+    response: {
+      status: 430,
+      payload: undefined,
+      messages: ['client1'],
+      notPermitteds: undefined,
+    },
+  },
+};
+
+const TT_test5: TT<string, boolean> = {
+  value: 'server',
+  context: {
+    iterator: 0,
+    request: true,
+    response: {
+      status: 500,
+      payload: undefined,
+      messages: ['serv1'],
+      notPermitteds: undefined,
+    },
+  },
+};
+
+const TT_test6: TT<string, boolean> = {
+  value: 'permission',
+  context: {
+    iterator: 0,
+    request: false,
+    response: {
+      status: 600,
+      payload: undefined,
+      messages: ['perm1'],
+      notPermitteds: ['perm2'],
+    },
+  },
+};
+const TT_test7: TT<string, boolean> = {
+  value: 'timeout',
+  context: {
+    iterator: 0,
+    request: true,
+    response: {
+      status: 997,
+      payload: undefined,
+      notPermitteds: undefined,
+      messages: undefined,
+    },
+  },
+};
+
+// #endregion
+
 export type ServiceReturn<R = any> = NOmit<TC<R>, 'iterator'>;
 
 export type SR<R = any> = ServiceReturn<R>;
+
+export type StateValueCRUD = TypeOf<typeof stateSchemaCRUD>;
+
+export type StateCommonCRUD = TypeOf<typeof statesCommonSchemaCRUD>;
 
 export type StateValueCRUDF = NExclude<
   StateValueCRUD,
   'idle' | 'pending' | 'checking'
 >;
 
+export type StateMachineCRUD<C = any, E = any> = StateMachine<
+  TC<C, E>,
+  any,
+  TE<E>,
+  TT<C, E>
+>;
+
 export type FinalStates = Record<
   StateValueCRUDF,
   {
-    entry: typeof ACTIONS_CRUD.object.increment;
+    entry: [
+      typeof ACTIONS_CRUD.object.__increment,
+      typeof ACTIONS_CRUD.object.assign,
+    ];
     type: 'final';
   }
 >;
@@ -169,85 +364,28 @@ export type StateCRUDArgs<C = any, E = any> = {
   // guards:Guards<TC<C>>
 };
 
-export type StateValueCRUD = TypeOf<typeof stateSchemaCRUD>;
-
-export type StateCommonCRUD = TypeOf<typeof statesCommonSchemaCRUD>;
-
 export type AbsoluteUdefiny<T extends Record<string, any>> = {
   [key in keyof T]: undefined;
 };
 
 export type ObjectStatus<S extends Status> = { status: S };
 
-export type TT<E> =
-  | {
-      value: NExtract<States, 'information'>;
-      context: TC<E> &
-        ObjectStatus<InformationStatus> &
-        AbsoluteUdefiny<Pick<TC<E>, 'notPermitteds'>>;
-    }
-  | {
-      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'success'>;
-      context: TC<E> &
-        ObjectStatus<SuccessStatus> &
-        Required<Pick<TC<E>, 'payload'>> &
-        AbsoluteUdefiny<Pick<TC<E>, 'notPermitteds' | 'messages'>>;
-    }
-  | {
-      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'redirect'>;
-      context: TC<E> &
-        ObjectStatus<RedirectStatus> &
-        AbsoluteUdefiny<Pick<TC<E>, 'notPermitteds'>>;
-    }
-  | {
-      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'client'>;
-      context: TC<E> &
-        ObjectStatus<ClientErrorStatus> &
-        AbsoluteUdefiny<Pick<TC<E>, 'payload' | 'notPermitteds'>>;
-    }
-  | {
-      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'server'>;
-      context: TC<E> &
-        ObjectStatus<ServerErrorStatus> &
-        AbsoluteUdefiny<Pick<TC<E>, 'payload' | 'notPermitteds'>>;
-    }
-  | {
-      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'permission'>;
-      context: TC<E> & ObjectStatus<PermissionErrorStatus>;
-    }
-  | {
-      value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'timeout'>;
-      context: TC<E> &
-        ObjectStatus<InformationStatus> &
-        AbsoluteUdefiny<
-          Pick<TC<E>, 'notPermitteds' | 'messages' | 'payload'>
-        >;
-    };
+export type RequiredFields<T, K extends keyof T> = NOmit<T, K> &
+  Required<Pick<T, K>>;
 
-// #region Test Types
+export type UndefinyFields<T, K extends keyof T> = NOmit<T, K> &
+  Partial<Record<K, undefined>>;
 
-type Test1 = TT<Entity>;
+export type NeveryFields<T, K extends keyof T> = NOmit<T, K> &
+  Record<K, never>;
 
-const test1: Test1 = {
-  context: { iterator: 0, status: 100, payload: {} },
-  value: 'information',
-};
-
-// #endregion
+export type PartialFields<T, K extends keyof T> = NOmit<T, K> &
+  Partial<Pick<T, K>>;
 
 // StateMachine<TContext, TStateSchema extends StateSchema, TEvent extends EventObject, TTypestate extends Typestate<TContext> = {
 //     value: any;
 //     context: TContext;
 // }, _TAction extends ActionObject<TContext, TEvent>
-
-export type REqREsp<C, E = any> = { response: C; request: E };
-
-export type StateMachineCRUD<C, E = any> = StateMachine<
-  TC<{ response: C; request: E }>,
-  any,
-  TE<E>,
-  TT<{ response: C; request: E }>
->;
 
 export type DeepOmit<T, K extends string> = T extends Record<
   string,
@@ -281,7 +419,7 @@ export type TypeState =
 export type CreateMany<E = any> = StateMachineCRUD<
   string[],
   {
-    data: WT<WO<E>>[];
+    data: WT<WithoutDeepID<E>>[];
     options?: QueryOptions;
   }
 >;
@@ -289,7 +427,7 @@ export type CreateMany<E = any> = StateMachineCRUD<
 export type CreateOne<E = any> = StateMachineCRUD<
   string,
   {
-    data: WT<WO<E>>;
+    data: WT<WithoutDeepID<E>>;
     options?: NOmit<QueryOptions, 'limit'>;
   }
 >;
@@ -298,7 +436,7 @@ export type UpsertOne<E = any> = StateMachineCRUD<
   string,
   {
     _id?: string;
-    data: WT<WO<E>>;
+    data: WT<WithoutDeepID<E>>;
     options?: NOmit<QueryOptions, 'limit'>;
   }
 >;
@@ -306,7 +444,7 @@ export type UpsertOne<E = any> = StateMachineCRUD<
 export type UpsertMany<E = any> = StateMachineCRUD<
   string[],
   {
-    upserts: { _id?: string; data: WO<E> }[];
+    upserts: { _id?: string; data: WithoutDeepID<E> }[];
     options?: QueryOptions;
   }
 >;
@@ -358,7 +496,7 @@ export type Count<E = any> = StateMachineCRUD<
 export type UpdateAll<E = any> = StateMachineCRUD<
   string[],
   {
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: QueryOptions;
   }
 >;
@@ -367,7 +505,7 @@ export type UpdateMany<E = any> = StateMachineCRUD<
   string[],
   {
     filters: DSO<E>;
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: QueryOptions;
   }
 >;
@@ -377,7 +515,7 @@ export type UpdateManyByIds<E = any> = StateMachineCRUD<
   {
     ids: string[];
     filters?: DSO<E>;
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: QueryOptions;
   }
 >;
@@ -386,7 +524,7 @@ export type UpdateOne<E = any> = StateMachineCRUD<
   string,
   {
     filters: DSO<E>;
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: NOmit<QueryOptions, 'limit'>;
   }
 >;
@@ -396,7 +534,7 @@ export type UpdateOneById<E = any> = StateMachineCRUD<
   {
     id: string;
     filters?: DSO<E>;
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: NOmit<QueryOptions, 'limit'>;
   }
 >;
@@ -407,7 +545,7 @@ export type UpdateOneById<E = any> = StateMachineCRUD<
 export type SetAll<E = any> = StateMachineCRUD<
   string[],
   {
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: QueryOptions;
   }
 >;
@@ -416,7 +554,7 @@ export type SetMany<E = any> = StateMachineCRUD<
   string[],
   {
     filters: DSO<E>;
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: QueryOptions;
   }
 >;
@@ -426,7 +564,7 @@ export type SetManyByIds<E = any> = StateMachineCRUD<
   {
     ids: string[];
     filters?: DSO<E>;
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: QueryOptions;
   }
 >;
@@ -435,7 +573,7 @@ export type SetOne<E = any> = StateMachineCRUD<
   string,
   {
     filters: DSO<E>;
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: NOmit<QueryOptions, 'limit'>;
   }
 >;
@@ -445,7 +583,7 @@ export type SetOneById<E = any> = StateMachineCRUD<
   {
     id: string;
     filters?: DSO<E>;
-    data: Omit<WO<E>, '_updatedAt'>;
+    data: Omit<WithoutDeepID<E>, '_updatedAt'>;
     options?: NOmit<QueryOptions, 'limit'>;
   }
 >;

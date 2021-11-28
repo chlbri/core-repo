@@ -8,7 +8,7 @@ import {
   SuccessStatus,
   ServerErrorStatus,
   TimeoutErrorStatus,
-} from './status';
+} from './crud/status';
 
 export type InformationFunction<T, R> = (
   status: InformationStatus,

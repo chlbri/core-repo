@@ -2,15 +2,13 @@ lockfileVersion: 5.3
 
 specifiers:
   '@core_chlbri/core': ^0.1.1-dc
-  '@core_chlbri/test-machine': ^0.1.7
+  '@core_chlbri/test-machine': ^0.1.730
   '@types/faker': ^5.5.9
   '@types/jest': ^27.0.2
   '@types/object.omit': ^3.0.0
   '@typescript-eslint/eslint-plugin': ^5.1.0
   '@typescript-eslint/parser': ^5.1.0
-  core: https://github.com/chlbri/core.git#publish
-  core-promises: https://github.com/chlbri/core-promises.git
-  core-test: https://github.com/chlbri/core-test.git
+  '@xstate/immer': ^0.3.0
   dayjs: ^1.10.7
   dequal: ^2.0.2
   edit-json-file: ^1.6.0
@@ -20,6 +18,7 @@ specifiers:
   jest: ^27.3.0
   jest-cucumber: ^3.0.1
   jest-extended: ^1.1.0
+  mock-stdin: ^1.0.0
   mongodb: ^4.1.3
   nanoid: ^3.1.30
   object.omit: ^3.0.0
@@ -33,18 +32,16 @@ specifiers:
 
 dependencies:
   '@core_chlbri/core': 0.1.1-dc
+  '@xstate/immer': 0.3.0_immer@9.0.6+xstate@4.26.1
   xstate: 4.26.1
 
 devDependencies:
-  '@core_chlbri/test-machine': 0.1.7_09b7e9df654b7428f04c4f9c49755fb3
+  '@core_chlbri/test-machine': 0.1.730_09b7e9df654b7428f04c4f9c49755fb3
   '@types/faker': 5.5.9
   '@types/jest': 27.0.3
   '@types/object.omit': 3.0.0
   '@typescript-eslint/eslint-plugin': 5.4.0_5c8ff4cecd5a55e744866c0654edac32
   '@typescript-eslint/parser': 5.4.0_eslint@8.3.0+typescript@4.5.2
-  core: github.com/chlbri/core/3711f58f7aca16f732ec36543ece96176463a6bf
-  core-promises: github.com/chlbri/core-promises/24185b774bd321e9176c991f1d39ac6c4fc9f34d_1b3125c42a768499b321738d48192baf
-  core-test: github.com/chlbri/core-test/60c2afe72cc99f3b09a56b7c9d3d4862091a2898_4e3a15bbc1556c4af7e6b75c75ec6dc6
   dayjs: 1.10.7
   dequal: 2.0.2
   edit-json-file: 1.6.2
@@ -54,6 +51,7 @@ devDependencies:
   jest: 27.3.1
   jest-cucumber: 3.0.1
   jest-extended: 1.1.0
+  mock-stdin: 1.0.0
   mongodb: 4.2.0
   nanoid: 3.1.30
   object.omit: 3.0.0
@@ -423,8 +421,8 @@ packages:
       dequal: 2.0.2
       nanoid: 3.1.30
 
-  /@core_chlbri/test-machine/0.1.7_09b7e9df654b7428f04c4f9c49755fb3:
-    resolution: {integrity: sha512-k4AjmIfqVV9vlsIgQkkk3kl0zPIY1gNq+8l6c/6WN6KYVag0oXB0g2Un5U/udLQGgSgN8sdULnK1bK5uoNhjYA==}
+  /@core_chlbri/test-machine/0.1.730_09b7e9df654b7428f04c4f9c49755fb3:
+    resolution: {integrity: sha512-o2cwUpVUbYgdczvbOKeCw50ijGLNK7R3ahb4wrdc4Y6R0j/RywSTCyTLSO0CrLgJbVnpot1vWzm185NPR9+i9w==}
     engines: {node: '>=12'}
     dependencies:
       '@core_chlbri/core': 0.1.1-dc
@@ -1206,6 +1204,16 @@ packages:
       '@typescript-eslint/types': 5.4.0
       eslint-visitor-keys: 3.1.0
     dev: true
+
+  /@xstate/immer/0.3.0_immer@9.0.6+xstate@4.26.1:
+    resolution: {integrity: sha512-eJduk/9AheCMFpIQ3QHU2ctjfVWRAcCu9+6oC3oElmPJzVZVH7/xXU7mCr/+nLoGswoQVltQV5mCMCMIWquLzw==}
+    peerDependencies:
+      immer: ^9.0.6
+      xstate: ^4.9.1
+    dependencies:
+      immer: 9.0.6
+      xstate: 4.26.1
+    dev: false
 
   /abab/2.0.5:
     resolution: {integrity: sha512-9IK9EadsbHo6jLWIpxpR6pL0sazTXV6+SQv25ZB+F7Bj9mJNaOc4nCRabwd5M/JwmUa8idz6Eci6eKfJryPs6Q==}
@@ -4085,6 +4093,10 @@ packages:
       is-extendable: 1.0.1
     dev: true
 
+  /mock-stdin/1.0.0:
+    resolution: {integrity: sha512-tukRdb9Beu27t6dN+XztSRHq9J0B/CoAOySGzHfn8UTfmqipA5yNT/sDUEyYdAV3Hpka6Wx6kOMxuObdOex60Q==}
+    dev: true
+
   /mongodb-connection-string-url/2.2.0:
     resolution: {integrity: sha512-U0cDxLUrQrl7DZA828CA+o69EuWPWEJTwdMPozyd7cy/dbtncUZczMw7wRHcwMD7oKOn0NM2tF9jdf5FFVW9CA==}
     dependencies:
@@ -5413,48 +5425,4 @@ packages:
 
   /zod/3.11.6:
     resolution: {integrity: sha512-daZ80A81I3/9lIydI44motWe6n59kRBfNzTuS2bfzVh1nAXi667TOTWWtatxyG+fwgNUiagSj/CWZwRRbevJIg==}
-    dev: true
-
-  github.com/chlbri/core-promises/24185b774bd321e9176c991f1d39ac6c4fc9f34d_1b3125c42a768499b321738d48192baf:
-    resolution: {tarball: https://codeload.github.com/chlbri/core-promises/tar.gz/24185b774bd321e9176c991f1d39ac6c4fc9f34d}
-    id: github.com/chlbri/core-promises/24185b774bd321e9176c991f1d39ac6c4fc9f34d
-    name: '@core/promises'
-    version: 0.0.34-messages
-    peerDependencies:
-      dequal: ^2.0.2
-      immer: ^9.0.6
-      nanoid: ^3.1.30
-      zod: 3.10.1
-    dependencies:
-      dequal: 2.0.2
-      immer: 9.0.6
-      nanoid: 3.1.30
-      zod: 3.11.6
-    dev: true
-
-  github.com/chlbri/core-test/60c2afe72cc99f3b09a56b7c9d3d4862091a2898_4e3a15bbc1556c4af7e6b75c75ec6dc6:
-    resolution: {tarball: https://codeload.github.com/chlbri/core-test/tar.gz/60c2afe72cc99f3b09a56b7c9d3d4862091a2898}
-    id: github.com/chlbri/core-test/60c2afe72cc99f3b09a56b7c9d3d4862091a2898
-    name: gitpod-typescript
-    version: 0.0.18
-    peerDependencies:
-      core: github:chlbri/core#v0.0.22
-      dequal: ^2.0.2
-      mock-stdin: ^1.0.0
-      nanoid: ^3.1.30
-      object.omit: ^3.0.0
-      zod: ^3.11.6
-    dependencies:
-      core: github.com/chlbri/core/3711f58f7aca16f732ec36543ece96176463a6bf
-      dequal: 2.0.2
-      nanoid: 3.1.30
-      object.omit: 3.0.0
-      zod: 3.11.6
-    dev: true
-
-  github.com/chlbri/core/3711f58f7aca16f732ec36543ece96176463a6bf:
-    resolution: {tarball: https://codeload.github.com/chlbri/core/tar.gz/3711f58f7aca16f732ec36543ece96176463a6bf}
-    name: '@core/core'
-    version: 0.0.2
-    engines: {node: '>=12'}
     dev: true

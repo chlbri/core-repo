@@ -48,7 +48,7 @@ import {
   UpsertMany,
   UpsertOne,
   WI,
-  WO,
+  WithoutDeepID,
 } from '../../types/_crud';
 import type {
   DataSearchOperations,
@@ -72,7 +72,7 @@ export class ArrayCRUD_DB<E extends Entity> implements CRUD<E> {
     private permissions: CollectionPermissions,
   ) {}
 
-  __update = (payload: string[], update: WO<E>) => {
+  __update = (payload: string[], update: WithoutDeepID<E>) => {
     const __db = produce([...this._db], draft => {
       payload.forEach(id => {
         const index = draft.findIndex((data: any) => data._id === id);
@@ -240,6 +240,7 @@ export class ArrayCRUD_DB<E extends Entity> implements CRUD<E> {
           id: 'readAll',
           initial: 'idle',
           states: {
+            
             idle: {
               always: [
                 { cond: () => this._db.length < 0, target: 'empty' },
@@ -300,7 +301,7 @@ export class ArrayCRUD_DB<E extends Entity> implements CRUD<E> {
     {
       id: 'readAll',
       initial: STATES_CRUD.object.idle,
-      context: { iterator: 0, status: 415 } as TC<WI<E>[]>,
+      context: { iterator: 0, response:{status: 415}, request:{} } as TC<WI<E>[]>,
       states: {
         [STATES_CRUD.object.idle]: {
           on: {
