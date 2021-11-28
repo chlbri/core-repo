@@ -2,7 +2,7 @@ lockfileVersion: 5.3
 
 specifiers:
   '@core_chlbri/core': ^0.1.1-dc
-  '@core_chlbri/test-machine': ^0.1.730
+  '@core_chlbri/test-machine': ^0.1.738
   '@types/faker': ^5.5.9
   '@types/jest': ^27.0.2
   '@types/object.omit': ^3.0.0
@@ -36,7 +36,7 @@ dependencies:
   xstate: 4.26.1
 
 devDependencies:
-  '@core_chlbri/test-machine': 0.1.730_09b7e9df654b7428f04c4f9c49755fb3
+  '@core_chlbri/test-machine': 0.1.738_09b7e9df654b7428f04c4f9c49755fb3
   '@types/faker': 5.5.9
   '@types/jest': 27.0.3
   '@types/object.omit': 3.0.0
@@ -421,8 +421,8 @@ packages:
       dequal: 2.0.2
       nanoid: 3.1.30
 
-  /@core_chlbri/test-machine/0.1.730_09b7e9df654b7428f04c4f9c49755fb3:
-    resolution: {integrity: sha512-o2cwUpVUbYgdczvbOKeCw50ijGLNK7R3ahb4wrdc4Y6R0j/RywSTCyTLSO0CrLgJbVnpot1vWzm185NPR9+i9w==}
+  /@core_chlbri/test-machine/0.1.738_09b7e9df654b7428f04c4f9c49755fb3:
+    resolution: {integrity: sha512-82kUIi15GTKx39zb7zaxn6nKIeX/0EKbBETyB5DWIslooCOyTss3+LtF7fHxb0En7Jkl3f5GKqQrmvoMqCvg6A==}
     engines: {node: '>=12'}
     dependencies:
       '@core_chlbri/core': 0.1.1-dc

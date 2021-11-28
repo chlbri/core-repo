@@ -28,7 +28,7 @@
     "git-publish": "publish"
   },
   "devDependencies": {
-    "@core_chlbri/test-machine": "^0.1.730",
+    "@core_chlbri/test-machine": "^0.1.738",
     "@types/faker": "^5.5.9",
     "@types/jest": "^27.0.2",
     "@types/object.omit": "^3.0.0",
