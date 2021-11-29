@@ -73,6 +73,11 @@ export const STATES_FINAL = {
   },
 } as const;
 
-export const STATES_COMMON_CRUD = getLiteralValues(statesCommonSchemaCRUD);
+export const STATES_COMMON_CRUD = getLiteralValues(statesCommonSchemaCRUD); //?
 
 export const ERRORS_STRING = getLiteralValues(errorSchema);
+
+
+const D = {
+  [STATES_COMMON_CRUD.object.checking]:'3'
+}

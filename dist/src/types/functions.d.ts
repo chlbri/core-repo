@@ -1,0 +1,15 @@
+import { ClientErrorStatus, InformationStatus, PermissionErrorStatus, RedirectStatus, SuccessStatus, ServerErrorStatus, TimeoutErrorStatus } from './crud/status';
+export declare type InformationFunction<T, R> = (status: InformationStatus, payload?: T, messages?: string[]) => R;
+export declare type InformationGuard<T> = InformationFunction<T, boolean>;
+export declare type SuccessFunction<T, R> = (status: SuccessStatus, payload: T, messages?: string[]) => R;
+export declare type SuccessGuard<T> = SuccessFunction<T, boolean>;
+export declare type RedirectFunction<T, R> = (status: RedirectStatus, payload?: T, messages?: string[]) => R;
+export declare type RedirectGuard<T> = RedirectFunction<T, boolean>;
+export declare type ClientErrorFunction<R> = (status: ClientErrorStatus, messages?: string[]) => R;
+export declare type ClientErrorGuard = ClientErrorFunction<boolean>;
+export declare type ServerFunction<R> = (status: ServerErrorStatus, messages?: string[]) => R;
+export declare type ServerErrorGuard = ServerFunction<boolean>;
+export declare type PermissionErrorFunction<T, R> = (status: PermissionErrorStatus, payload?: T, notPermitteds?: string[], messages?: string[]) => R;
+export declare type PermissionErrorGuard<T> = PermissionErrorFunction<T, boolean>;
+export declare type TimeoutErrorFunction<R> = (status: TimeoutErrorStatus) => R;
+export declare type TimeoutErrorGuard = TimeoutErrorFunction<boolean>;

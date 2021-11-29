@@ -1,3 +1,4 @@
+import { log } from '@core_chlbri/core';
 import produce from 'immer';
 import { createMachine } from 'xstate';
 import {
@@ -23,14 +24,18 @@ export function createCRUDMachine<C = any, E = any>({
   status,
 }: MachineArgsCRUD<C, E>): StateMachineCRUD<C, E> {
   const __states = config.states;
-
+  log('config', config);
+  log('states', __states);
+  log('status', status);
   const context: TC<C> = {
     iterator: 0,
     response: { status: (500 + status) as Status },
   };
 
+  config; //?
+
   const _config: MachineArgsCRUD<C, E>['config'] = produce(
-    configSChema.parse(config),
+    config,
     draft => {
       Object.assign(draft, { initial: STATE_VALUES_CRUD.object.idle });
       Object.assign(draft, { context });
@@ -38,8 +43,8 @@ export function createCRUDMachine<C = any, E = any>({
         idle: {
           on: {
             SEND: {
-              actions: [ACTIONS_CRUD.object.__assignRequest],
-              target: STATE_CHECKING,
+              actions: ['__assignRequest'],
+              target: 'checking',
             },
           },
         },
@@ -51,9 +56,9 @@ export function createCRUDMachine<C = any, E = any>({
   );
 
   const _options: MachineArgsCRUD<C, E>['options'] = produce(
-    optionsSchema.parse(options),
+    options,
     draft => {
-      if (draft) {
+      if (draft?.actions) {
         Object.assign(draft.actions, generateDefaultActions<C, E>(status));
       }
     },

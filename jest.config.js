@@ -1,6 +1,6 @@
 module.exports = {
   preset: 'ts-jest',
-  testPathIgnorePatterns: ['./dist'],
+  // testPathIgnorePatterns: ['./dist'],
   testEnvironment: 'node',
   setupFilesAfterEnv: ['jest-extended/all'],
 };
