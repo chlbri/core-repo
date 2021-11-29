@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { ArrayCRUD_DB } from './../../../src/adapters/array/db';
 import { generateSyncMachineTest as ttestM } from '@core_chlbri/test-machine';
+import {
+  STATES_COMMON_CRUD,
+  STATE_VALUES_CRUD,
+} from '../../../src/constants/strings';
 
 const db = new ArrayCRUD_DB([], {
   __create: [],
@@ -18,12 +22,14 @@ describe('Read', () => {
     events: [
       {
         type: 'SEND',
-        data: {
-          options: {},
-        },
       },
     ],
-    tests: [],
+    tests: [
+      { value: STATE_VALUES_CRUD.object.idle },
+      { value: STATES_COMMON_CRUD.object.checking },
+      { value: STATES_COMMON_CRUD.object.empty_db },
+      { value: STATE_VALUES_CRUD.object.server },
+    ],
   });
 });
 describe('Update', () => {});
