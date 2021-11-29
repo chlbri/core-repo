@@ -2,8 +2,6 @@ import { literal, union } from 'zod';
 
 export const stateSchemaCRUD = union([
   literal('idle'),
-  literal('pending'),
-  literal('checking'),
   literal('information'),
   literal('success'),
   literal('redirect'),
@@ -25,7 +23,7 @@ export const stateFSchemaCRUD = union([
 
 export const actionSchemaCRUD = union([
   literal('__increment'),
-  literal('__assignStatus'),
+  literal('__assignRequest'),
 ]);
 
 export const statesCommonSchemaCRUD = union([

@@ -44,7 +44,7 @@ import {
 import { TypeOf } from 'zod';
 import {
   ACTIONS_CRUD,
-  STATES_CRUD,
+  STATE_VALUES_CRUD,
   STATES_FINAL,
 } from '../constants/strings';
 import { Entity, WithId, WithoutId, WithoutTimeStamps } from '../entities';

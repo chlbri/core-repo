@@ -1,13 +1,17 @@
 import produce from 'immer';
 import { createMachine } from 'xstate';
-import { actionSchemaCRUD, stateFSchemaCRUD } from '..';
-import { ERRORS_STRING, STATES_FINAL } from '../constants/strings';
+import { actionSchemaCRUD, stateSchemaCRUD } from '..';
+import {
+  ERRORS_STRING,
+  STATES_FINAL,
+  STATE_VALUES_CRUD,
+} from '../constants/strings';
 import {
   MachineArgsCRUD,
-  MachineConfigCRUD,
   StateMachineCRUD,
+  TC,
 } from '../types/crud/config';
-import { DEFAULT_ACTIONS } from './helpers';
+import { generateDefaultActions } from './helpers';
 
 export function createCRUDMachine<C = any, E = any>({
   config,
@@ -24,36 +28,52 @@ export function createCRUDMachine<C = any, E = any>({
   }
 
   const nocheck3 = Object.keys(__states).some(
-    key => stateFSchemaCRUD.safeParse(key).success,
+    key => stateSchemaCRUD.safeParse(key).success,
   );
 
   if (nocheck3) {
     throw ERRORS_STRING.object.states_internal;
   }
+
+  const nocheck4 = !!config.context;
+
+  if (nocheck4) {
+    throw ERRORS_STRING.object.context_exits;
+  }
+
+  if (options) {
+    const __actions = options.actions;
+    if (__actions) {
+      const nocheck5 = Object.keys(__actions).some(
+        key => actionSchemaCRUD.safeParse(key).success,
+      );
+      if (nocheck5) throw ERRORS_STRING.object.actions_internal;
+    }
+  }
+
+  const context: TC<C, E> = {
+    iterator: 0,
+    response: { status: 404 },
+  };
+
   const _config: MachineArgsCRUD<C, E>['config'] = produce(
     config,
     draft => {
-      if (draft.states) {
+      draft.initial = STATE_VALUES_CRUD.object.idle;
+      if (draft) {
+        draft.context = context as any;
+        draft.states = { [STATE_VALUES_CRUD.object.idle]: {} };
+        Object.assign(draft.states, __states);
         Object.assign(draft.states, STATES_FINAL);
       }
     },
   );
 
-  if (options) {
-    const __actions = options.actions;
-    if (__actions) {
-      const nocheck4 = Object.keys(__actions).some(
-        key => actionSchemaCRUD.safeParse(key).success,
-      );
-      if (nocheck4) throw ERRORS_STRING.object.actions_internal;
-    }
-  }
-
   const _options: MachineArgsCRUD<C, E>['options'] = produce(
     options,
     draft => {
-      if (draft?.actions) {
-        Object.assign(draft.actions, DEFAULT_ACTIONS);
+      if (draft) {
+        Object.assign(draft.actions, generateDefaultActions<C, E>());
       }
     },
   );

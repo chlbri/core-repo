@@ -9,11 +9,18 @@ export const error = (arg?: string): never => {
   throw new Error(arg);
 };
 
-export const DEFAULT_ACTIONS: DefaultActions = {
-  [ACTIONS_CRUD.object.__increment]: assign(({ iterator }) => {
-    iterator++;
-  }),
-  [ACTIONS_CRUD.object.__assignStatus]: assign(({ status }, { data }) => {
-    if (isStatus(data)) status = data;
-  }),
-};
+export function generateDefaultActions<C = any, E = any>(): DefaultActions<
+  C,
+  E
+> {
+  return {
+    [ACTIONS_CRUD.object.__increment]: assign(({ iterator }) => {
+      iterator++;
+    }),
+    [ACTIONS_CRUD.object.__assignRequest]: assign(
+      ({ request }, { data }) => {
+        if (data) request = data as any;
+      },
+    ),
+  };
+}

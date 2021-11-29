@@ -5,4 +5,5 @@ export const errorSchema = union([
   literal('empty_states'),
   literal('actions_internal'),
   literal('states_internal'),
+  literal('context_exits'),
 ]);

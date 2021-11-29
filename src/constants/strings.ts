@@ -1,15 +1,14 @@
-import { NExclude } from '@core_chlbri/core';
 import { getLiteralValues } from '../functions';
 import { errorSchema } from '../schemas/strings/error';
 import {
   actionSchemaCRUD,
+  stateFSchemaCRUD,
   stateSchemaCRUD,
   statesCommonSchemaCRUD,
-  stateFSchemaCRUD,
 } from '../schemas/strings/machines';
 import { FinalStates } from '../types/crud/config';
 
-export const STATES_CRUD = getLiteralValues(stateSchemaCRUD);
+export const STATE_VALUES_CRUD = getLiteralValues(stateSchemaCRUD);
 
 export const STATESF_CRUD = getLiteralValues(stateFSchemaCRUD);
 
@@ -20,7 +19,7 @@ function writeFinalState<S extends string>(str: S) {
     [str]: {
       entry: [
         ACTIONS_CRUD.object.__increment,
-        ACTIONS_CRUD.object.__assignStatus,
+        ACTIONS_CRUD.object.__assignRequest,
       ],
       type: 'final',
     },
@@ -32,8 +31,8 @@ export const STATES_FINAL = STATESF_CRUD.array
   .reduce((acc, curr) => {
     Object.assign(acc, curr);
     return acc;
-  }, {}) as FinalStates; //?
+  }, {}) as FinalStates;
 
 export const STATES_COMMON_CRUD = getLiteralValues(statesCommonSchemaCRUD);
 
-export const ERRORS_STRING = getLiteralValues(errorSchema); //?
+export const ERRORS_STRING = getLiteralValues(errorSchema);

@@ -1,7 +1,7 @@
 {
-  "name": "@core/data",
-  "version": "0.0.14",
-  "description": "GitPod for Typescript",
+  "name": "@core/repo",
+  "version": "0.0.1",
+  "description": "The repo",
   "repository": "https://github.com/chlbri/core-data.git",
   "author": "chlbri <bri_lvi@icloud.com>",
   "main": "./dist/index.js",
@@ -13,7 +13,8 @@
     "build": "pnpm test && pnpm build:-test",
     "build:-test": "pnpm tsc && pnpm lint",
     "clear:test": "jest --clearCache",
-    "test": "jest",
+    "test": "jest --no-cache",
+    "test:watch": "jest --watch",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
     "eslint": "eslint \"{src/**/*,App}.{ts,tsx,yml,json}\"",
     "lint": "pnpm prettier && pnpm eslint -- --fix",
@@ -28,7 +29,7 @@
     "git-publish": "publish"
   },
   "devDependencies": {
-    "@core_chlbri/test-machine": "^0.1.738",
+    "@core_chlbri/test-machine": "^0.1.740",
     "@types/faker": "^5.5.9",
     "@types/jest": "^27.0.2",
     "@types/object.omit": "^3.0.0",
@@ -39,7 +40,6 @@
     "edit-json-file": "^1.6.0",
     "eslint": "^8.0.1",
     "faker": "^5.5.3",
-    "immer": "^9.0.6",
     "jest": "^27.3.0",
     "jest-cucumber": "^3.0.1",
     "jest-extended": "^1.1.0",
@@ -51,17 +51,13 @@
     "rimraf": "^3.0.2",
     "shelljs": "^0.8.4",
     "ts-jest": "^27.0.7",
-    "typescript": "^4.4.4",
-    "zod": "^3.11.6"
-  },
-  "peerDependencies": {
-    "core": "https://github.com/chlbri/core.git#publish",
-    "core-promises": "https://github.com/chlbri/core-promises.git#publish",
-    "zod": "^3.10.1"
+    "typescript": "^4.5.2"
   },
   "dependencies": {
     "@core_chlbri/core": "^0.1.1-dc",
     "@xstate/immer": "^0.3.0",
-    "xstate": "^4.26.1"
+    "immer": "^9.0.6",
+    "xstate": "^4.26.1",
+    "zod": "^3.11.6"
   }
 }

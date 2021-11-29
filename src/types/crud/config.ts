@@ -1,36 +1,23 @@
 import {
-  actionSchemaCRUD,
-  stateSchemaCRUD,
-} from './../../schemas/strings/machines';
-import {
-  NExclude,
-  StringKeys,
-  DeepPartial,
-  NOmit,
-  NExtract,
+  DeepPartial, NExclude, NExtract, NOmit, StringKeys
 } from '@core_chlbri/core';
 import {
   ActionFunction,
   AssignAction,
   MachineConfig,
-  MachineOptions,
-  Mapper,
-  StateMachine,
-  StateNodeConfig,
+  MachineOptions, StateMachine
 } from 'xstate';
 import { TypeOf } from 'zod/lib/types';
 import { ACTIONS_CRUD } from '../../constants/strings';
 import { WithId, WithoutId } from '../../entities';
 import { statesCommonSchemaCRUD } from '../../schemas/strings';
 import {
-  ClientErrorStatus,
-  InformationStatus,
-  PermissionErrorStatus,
-  RedirectStatus,
-  ServerErrorStatus,
-  Status,
-  SuccessStatus,
-  TimeoutErrorStatus,
+  actionSchemaCRUD,
+  stateFSchemaCRUD,
+  stateSchemaCRUD
+} from './../../schemas/strings/machines';
+import {
+  InformationStatus, Status
 } from './status';
 
 export type Projection<T> = { [key in StringKeys<T>]: boolean | 0 | 1 };
@@ -49,22 +36,27 @@ export type DP<T> = DeepPartial<T>;
 export type WithDeepID<T> = WithId<DP<T>>;
 export type WithoutDeepID<T> = WithoutId<DP<T>>;
 
-export type FlatRD<T> = {
+export type Response<T> = {
   status: Status;
   payload?: DeepPartial<T>;
   messages?: string[];
   notPermitteds?: string[];
 };
 
-export type TC<C = any> = {
+export type ReqRes<C = any, E = any> = {
+  response: Response<C>;
+  request?: DeepPartial<E>;
+};
+
+export type TC<C = any, E = any> = {
   iterator: number;
-} & FlatRD<C>;
+} & ReqRes<C, E>;
 
 export type States = TypeOf<typeof stateSchemaCRUD>;
 
 export type TE<E> = {
   type: 'SEND';
-  data: E;
+  data?: E;
 };
 
 export type AbsoluteUdefiny<T extends Record<string, any>> = {
@@ -86,61 +78,37 @@ export type PartialFields<T, K extends keyof T> = NOmit<T, K> &
   Partial<Pick<T, K>>;
 
 // #region <TT>
-export type TT<C = any> =
+export type TT<C = any, E = any> =
   | {
       value: NExtract<States, 'information'>;
-      context: TC<C> &
-        UndefinyFields<FlatRD<C>, 'notPermitteds'> & {
+      context: TC<C, E> &
+        UndefinyFields<Response<C>, 'notPermitteds'> & {
           status: InformationStatus;
         };
     }
   | {
       value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'success'>;
-      context: TC<C> &
-        RequiredFields<
-          UndefinyFields<FlatRD<C>, 'notPermitteds'> & {
-            status: SuccessStatus;
-          },
-          'payload'
-        >;
+      context: TC<C, E>;
     }
   | {
       value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'redirect'>;
-      context: TC<C> &
-        UndefinyFields<FlatRD<C>, 'notPermitteds'> & {
-          status: RedirectStatus;
-        };
+      context: TC<C, E>;
     }
   | {
       value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'client'>;
-      context: TC<C> &
-        UndefinyFields<FlatRD<C>, 'notPermitteds' | 'payload'> & {
-          status: ClientErrorStatus;
-        };
+      context: TC<C, E>;
     }
   | {
       value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'server'>;
-      context: TC<C> &
-        UndefinyFields<FlatRD<C>, 'notPermitteds' | 'payload'> & {
-          status: ServerErrorStatus;
-        };
+      context: TC<C, E>;
     }
   | {
       value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'permission'>;
-      context: TC<C> &
-        FlatRD<C> & {
-          status: PermissionErrorStatus;
-        };
+      context: TC<C, E>;
     }
   | {
       value: NExtract<TypeOf<typeof stateSchemaCRUD>, 'timeout'>;
-      context: TC<C> &
-        UndefinyFields<
-          FlatRD<C>,
-          'notPermitteds' | 'payload' | 'messages'
-        > & {
-          status: TimeoutErrorStatus;
-        };
+      context: TC<C, E>;
     };
 
 // #endregion
@@ -152,10 +120,7 @@ export type DefaultActionValueCRUD = TypeOf<typeof actionSchemaCRUD>;
 
 export type StateCommonCRUD = TypeOf<typeof statesCommonSchemaCRUD>;
 
-export type StateValueCRUDF = NExclude<
-  StateValueCRUD,
-  'idle' | 'pending' | 'checking'
->;
+export type StateValueCRUDF = TypeOf<typeof stateFSchemaCRUD>
 
 export type ActionFunctionCRUD<C = any, E = any> = ActionFunction<
   TC<C>,
@@ -164,11 +129,11 @@ export type ActionFunctionCRUD<C = any, E = any> = ActionFunction<
 
 export type DefaultActions<C = any, E = any> = Record<
   DefaultActionValueCRUD,
-  AssignAction<TC<C>, TE<E>>
+  AssignAction<TC<C,E>, TE<E>>
 >;
 
 export type MachineConfigCRUD<C = any, E = any> = MachineConfig<
-  TC<C>,
+  TC<C,E>,
   any,
   TE<E>
 >;
@@ -186,22 +151,9 @@ type RSTates = {
   [key2 in StateValueCRUDF]: any;
 };
 
-export interface StatesNode extends RSTates {
-  [key: string]: any;
-}
 
-type Tes3 = keyof StatesNode;
 
-const tes3: StatesNode = {
-  information: '',
-  success: '',
-  redirect: '',
-  client: '',
-  server: '',
-  permission: '',
-  timeout: '',
-  eer: '',
-};
+
 
 export type Config = {
   config: {
@@ -220,22 +172,14 @@ export type Config = {
 
 // #region Test <StateMachineConfigCRUD>
 
-const testSMCC: MachineConfigCRUD<string, string> = {
-  initial: '',
-  states: {
-    idle: {
-      type: 'atomic',
-      on: {},
-    },
-  },
-};
+
 
 // #endregion
 
 // MachineConfig<TContext, any, TEvent>
 
 export type StateMachineCRUD<C = any, E = any> = StateMachine<
-  TC<C>,
+  TC<C,E>,
   any,
   TE<E>,
   TT<C>
@@ -246,7 +190,7 @@ export type FinalStates = Record<
   {
     entry: [
       typeof ACTIONS_CRUD.object.__increment,
-      typeof ACTIONS_CRUD.object.__assignStatus,
+      typeof ACTIONS_CRUD.object.__assignRequest,
     ];
     type: 'final';
   }

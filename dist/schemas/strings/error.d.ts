@@ -1,0 +1,1 @@
+export declare const errorSchema: import("zod").ZodUnion<[import("zod").ZodLiteral<"no_machine_states">, import("zod").ZodLiteral<"empty_states">, import("zod").ZodLiteral<"actions_internal">, import("zod").ZodLiteral<"states_internal">, import("zod").ZodLiteral<"context_exits">]>;
