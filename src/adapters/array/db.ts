@@ -1,13 +1,22 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { assign } from '@xstate/immer';
 import { produce } from 'immer';
 import {
   ACTIONS_CRUD,
+  ERRORS_STRING,
+  STATESF_CRUD,
   STATES_COMMON_CRUD,
   STATE_VALUES_CRUD,
 } from '../../constants/strings';
 import { CollectionPermissions, Entity } from '../../entities';
 import { createCRUDMachine } from '../../functions/machine';
-import { ReadMany, WithoutDeepID } from '../../types/crud';
+import {
+  CreateMany,
+  ReadAll,
+  ReadMany,
+  WithoutDeepID,
+} from '../../types/crud';
 
 // type Permission<T extends Entity> = {
 //   permissionReader: PermissionsReaderOne<T>;
@@ -55,52 +64,57 @@ export class ArrayCRUD_DB<E extends Entity> /* implements CRUD<E> */ {
 
   // #region Create
 
+  createMany: CreateMany<E> = createCRUDMachine({
+    status: 11,
+    config: {},
+    options: {},
+  });
   // #endregion
 
   // #region Read
 
-  readMany: ReadMany<E> = createCRUDMachine({
+  readAll: ReadAll<E> = createCRUDMachine({
     config: {
       id: 'readAll',
-      initial: STATE_VALUES_CRUD.object.idle,
       states: {
-        [STATE_VALUES_CRUD.object.idle]: {
-          on: {
-            SEND: [
-              { actions: [ACTIONS_CRUD.object.__assignRequest] },
-              {
-                cond: this.isEmpty,
-                target: STATES_COMMON_CRUD.object.empty_db,
-              },
-              { target: STATES_COMMON_CRUD.object.check_options_limit },
-            ],
-          },
+        [STATES_COMMON_CRUD.object.checking]: {
+          always: [
+            {
+              cond: this.isEmpty,
+              target: STATES_COMMON_CRUD.object.empty_db,
+            },
+            STATES_COMMON_CRUD.object.check_options_limit,
+          ],
         },
         [STATES_COMMON_CRUD.object.empty_db]: {
           entry: ACTIONS_CRUD.object.__increment,
-          type: 'final',
-          data: {
-            status: 515,
-            messages: [STATES_COMMON_CRUD.object.empty_db],
+          always: {
+            actions: assign(({ response: { messages } }) => {
+              messages = [STATES_COMMON_CRUD.object.empty_db];
+            }),
+            target: STATESF_CRUD.object.server,
           },
         },
         [STATES_COMMON_CRUD.object.check_options_limit]: {
           entry: ACTIONS_CRUD.object.__increment,
-
           always: [
             {
-              cond: (_, { data }) => !!data?.options?.limit,
+              cond: ({ request }) => !!request?.options?.limit,
               target: STATES_COMMON_CRUD.object.options_limit,
             },
-            { target: STATES_COMMON_CRUD.object.no_options_limit },
+            {
+              target: STATESF_CRUD.object.success,
+              actions: assign(({ response: { payload } }) => {
+                Object.assign(payload, this._db);
+              }),
+            },
           ],
         },
-        [STATES_COMMON_CRUD.object.no_options_limit]: {
+        [STATES_COMMON_CRUD.object.options_limit]: {
           initial: STATE_VALUES_CRUD.object.idle,
           states: {
             idle: {
               entry: ACTIONS_CRUD.object.__increment,
-
               always: [
                 {
                   cond: ({ request }) => {
@@ -109,20 +123,35 @@ export class ArrayCRUD_DB<E extends Entity> /* implements CRUD<E> */ {
                   },
                   target: STATES_COMMON_CRUD.object.limit_reached,
                 },
-                { target: '#readAll.nolimit' },
+                {
+                  target: `#readAll.${STATESF_CRUD.object.information}`,
+                  actions: assign(
+                    ({ response: { messages, payload } }) => {
+                      messages = [STATES_COMMON_CRUD.object.options_limit];
+                      Object.assign(payload, this._db);
+                    },
+                  ),
+                },
               ],
             },
             [STATES_COMMON_CRUD.object.limit_reached]: {
               entry: ACTIONS_CRUD.object.__increment,
+              always: {
+                actions: assign(
+                  ({ response: { payload, messages }, request }) => {
+                    messages = [STATES_COMMON_CRUD.object.limit_reached];
+                    const limit = request?.options?.limit;
+                    Object.assign(payload, this._db.slice(0, limit));
+                  },
+                ),
+                target: `#readAll.${STATESF_CRUD.object.redirect}`,
+              },
             },
           },
-        },
-        [STATES_COMMON_CRUD.object.options_limit]: {
-          type: 'final',
-          data: ({ response }) => response,
         },
       },
     },
     options: {},
+    status: 15,
   });
 }

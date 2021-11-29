@@ -1,24 +1,34 @@
 import {
-  DeepPartial, NExclude, NExtract, NOmit, StringKeys
+  DeepPartial,
+  NExclude,
+  NExtract,
+  NOmit,
+  StringKeys,
 } from '@core_chlbri/core';
 import {
   ActionFunction,
   AssignAction,
+  InvokeConfig,
   MachineConfig,
-  MachineOptions, StateMachine
+  MachineOptions,
+  Mapper,
+  PropertyMapper,
+  StateMachine,
+  StateNodeConfig,
+  StatesConfig,
+  TransitionConfigOrTarget,
 } from 'xstate';
 import { TypeOf } from 'zod/lib/types';
-import { ACTIONS_CRUD } from '../../constants/strings';
+import { ACTIONS_CRUD, STATE_VALUES_CRUD } from '../../constants/strings';
 import { WithId, WithoutId } from '../../entities';
+import { statusFigureSchema } from '../../schemas/status';
 import { statesCommonSchemaCRUD } from '../../schemas/strings';
 import {
   actionSchemaCRUD,
   stateFSchemaCRUD,
-  stateSchemaCRUD
+  stateSchemaCRUD,
 } from './../../schemas/strings/machines';
-import {
-  InformationStatus, Status
-} from './status';
+import { InformationStatus, Status, StatusFigure } from './status';
 
 export type Projection<T> = { [key in StringKeys<T>]: boolean | 0 | 1 };
 
@@ -120,7 +130,7 @@ export type DefaultActionValueCRUD = TypeOf<typeof actionSchemaCRUD>;
 
 export type StateCommonCRUD = TypeOf<typeof statesCommonSchemaCRUD>;
 
-export type StateValueCRUDF = TypeOf<typeof stateFSchemaCRUD>
+export type StateValueCRUDF = TypeOf<typeof stateFSchemaCRUD>;
 
 export type ActionFunctionCRUD<C = any, E = any> = ActionFunction<
   TC<C>,
@@ -129,11 +139,11 @@ export type ActionFunctionCRUD<C = any, E = any> = ActionFunction<
 
 export type DefaultActions<C = any, E = any> = Record<
   DefaultActionValueCRUD,
-  AssignAction<TC<C,E>, TE<E>>
+  AssignAction<TC<C, E>, TE<E>>
 >;
 
 export type MachineConfigCRUD<C = any, E = any> = MachineConfig<
-  TC<C,E>,
+  TC<C>,
   any,
   TE<E>
 >;
@@ -145,56 +155,65 @@ export type MachineOptionsCRUD<C = any, E = any> = Partial<
 export type MachineArgsCRUD<C = any, E = any> = {
   config: MachineConfigCRUD<C, E>;
   options?: MachineOptionsCRUD<C, E>;
+  status: StatusFigure;
 };
 
-type RSTates = {
-  [key2 in StateValueCRUDF]: any;
-};
-
-
-
-
-
-export type Config = {
-  config: {
-    key?: string;
-    initial?: Exclude<string, StateValueCRUDF>;
-    type?: 'atomic' | 'compound' | 'parallel' | 'final' | 'history';
-    history?: 'shallow' | 'deep' | boolean | undefined;
-    invoke: SingleOrArray<{
-      id?: string;
-      autoForward?: boolean;
-    }>;
-    states: Record<Exclude<string, StateValueCRUDF>, any>;
-  };
-  // options?: { services: {} };
-};
+// options?: { services: {} };
 
 // #region Test <StateMachineConfigCRUD>
-
-
 
 // #endregion
 
 // MachineConfig<TContext, any, TEvent>
 
+export type ActionCRUD = TypeOf<typeof actionSchemaCRUD>;
+
 export type StateMachineCRUD<C = any, E = any> = StateMachine<
-  TC<C,E>,
+  TC<C, E>,
   any,
   TE<E>,
   TT<C>
 >;
 
-export type FinalStates = Record<
-  StateValueCRUDF,
-  {
-    entry: [
-      typeof ACTIONS_CRUD.object.__increment,
-      typeof ACTIONS_CRUD.object.__assignRequest,
-    ];
+type NAction<T extends ActionCRUD> = NExtract<ActionCRUD, T>;
+type NStateVF<T extends StateValueCRUDF> = NExtract<StateValueCRUDF, T>;
+
+export type FinalStates = {
+  [key in NStateVF<'information'>]: {
+    entry: [NAction<'__information'>, NAction<'__increment'>];
     type: 'final';
-  }
->;
+  };
+} & {
+  [key in NStateVF<'success'>]: {
+    entry: [NAction<'__success'>, NAction<'__increment'>];
+    type: 'final';
+  };
+} & {
+  [key in NStateVF<'redirect'>]: {
+    entry: [NAction<'__redirect'>, NAction<'__increment'>];
+    type: 'final';
+  };
+} & {
+  [key in NStateVF<'client'>]: {
+    entry: [NAction<'__client'>, NAction<'__increment'>];
+    type: 'final';
+  };
+} & {
+  [key in NStateVF<'server'>]: {
+    entry: [NAction<'__server'>, NAction<'__increment'>];
+    type: 'final';
+  };
+} & {
+  [key in NStateVF<'permission'>]: {
+    entry: [NAction<'__permission'>, NAction<'__increment'>];
+    type: 'final';
+  };
+} & {
+  [key in NStateVF<'timeout'>]: {
+    entry: [NAction<'__timeout'>, NAction<'__increment'>];
+    type: 'final';
+  };
+};
 
 export type NExtractSV<S extends StateValueCRUDF> = NExtract<
   StateValueCRUDF,

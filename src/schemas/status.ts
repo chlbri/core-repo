@@ -17,3 +17,5 @@ export const statusSchema = union([
   permissionStatusSchema,
   timeoutErrorStatusSchema,
 ]);
+
+export const statusFigureSchema = number().int().gte(0).lte(99);

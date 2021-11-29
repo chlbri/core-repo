@@ -1,4 +1,14 @@
-import { CLIENT_ERROR_STATUS, INFORMATION_STATUS, PERMISSION_ERROR_STATUS, REDIRECT_STATUS, SERVER_ERROR_STATUS, SUCCESS_STATUS, TIMEOUT_ERROR_STATUS, STATUS } from '../../constants/status';
+import {
+  CLIENT_ERROR_STATUS,
+  INFORMATION_STATUS,
+  PERMISSION_ERROR_STATUS,
+  REDIRECT_STATUS,
+  SERVER_ERROR_STATUS,
+  SUCCESS_STATUS,
+  TIMEOUT_ERROR_STATUS,
+  STATUS,
+  STATUS_FIGURE,
+} from '../../constants/status';
 
 // #region Status
 export type ClientErrorStatus = typeof CLIENT_ERROR_STATUS[number];
@@ -16,4 +26,6 @@ export type SuccessStatus = typeof SUCCESS_STATUS[number];
 export type TimeoutErrorStatus = typeof TIMEOUT_ERROR_STATUS[number];
 
 export type Status = typeof STATUS[number];
+
+export type StatusFigure = typeof STATUS_FIGURE[number];
 // #endregion

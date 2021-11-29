@@ -2,24 +2,27 @@ import {
   ACTIONS_CRUD,
   ERRORS_STRING,
   STATESF_CRUD,
+  STATES_COMMON_CRUD,
+  STATE_CHECKING,
 } from '../../src/constants/strings';
 import { createCRUDMachine } from '../../src/functions/machine';
 import { generateSyncMachineTest as ttestM } from '@core_chlbri/test-machine';
 import { log } from '@core_chlbri/core';
 
+const status = 10 as const;
 describe('Existence', () => {
   it('Undefined states return error', () => {
     // const received = createCRUDMachine({});
-    expect(() => createCRUDMachine({ config: {} })).toThrow(
-      ERRORS_STRING.object.empty_states,
+    expect(() => createCRUDMachine({ config: {}, status })).toThrowError(
+      ERRORS_STRING.object.no_machine_states,
     );
   });
 
   it('Empty states return error', () => {
     // const received = createCRUDMachine({});
-    expect(() => createCRUDMachine({ config: { states: {} } })).toThrow(
-      ERRORS_STRING.object.no_machine_states,
-    );
+    expect(() =>
+      createCRUDMachine({ config: { states: {} }, status }),
+    ).toThrowError(ERRORS_STRING.object.empty_states);
   });
 
   it(`States contains STATESF_CRUD return error`, () => {
@@ -31,8 +34,9 @@ describe('Existence', () => {
             [STATESF_CRUD.object.information]: {},
           },
         },
+        status,
       }),
-    ).toThrow(ERRORS_STRING.object.states_internal);
+    ).toThrowError(ERRORS_STRING.object.states_internal);
 
     expect(() =>
       createCRUDMachine({
@@ -41,8 +45,9 @@ describe('Existence', () => {
             [STATESF_CRUD.object.success]: {},
           },
         },
+        status,
       }),
-    ).toThrow(ERRORS_STRING.object.states_internal);
+    ).toThrowError(ERRORS_STRING.object.states_internal);
 
     expect(() =>
       createCRUDMachine({
@@ -51,8 +56,30 @@ describe('Existence', () => {
             [STATESF_CRUD.object.permission]: {},
           },
         },
+        status,
       }),
     ).toThrow(ERRORS_STRING.object.states_internal);
+  });
+
+  it(`Config contains initial return error`, () => {
+    // const received = createCRUDMachine({});
+    expect(() =>
+      createCRUDMachine({
+        config: {
+          initial: 'idle',
+          context: { iterator: 0, response: { status: 300 } },
+          states: {
+            any: {},
+          },
+        },
+        options: {
+          actions: {
+            [ACTIONS_CRUD.object.__assignRequest]: '' as any,
+          },
+        },
+        status,
+      }),
+    ).toThrowError(ERRORS_STRING.object.initial);
   });
 
   it(`Config contains context return error`, () => {
@@ -70,55 +97,73 @@ describe('Existence', () => {
             [ACTIONS_CRUD.object.__assignRequest]: '' as any,
           },
         },
+        status,
       }),
-    ).toThrow(ERRORS_STRING.object.context_exits);
+    ).toThrowError(ERRORS_STRING.object.context_exits);
   });
 
-  (() => {
-    it(`Actions contains ${ACTIONS_CRUD.object.__assignRequest} return error`, () => {
-      // const received = createCRUDMachine({});
-      expect(() =>
-        createCRUDMachine({
-          config: {
-            states: {
-              any: {},
-            },
+  it(`States not contains ${STATES_COMMON_CRUD.object.checking} return error`, () => {
+    // const received = createCRUDMachine({});
+    expect(() =>
+      createCRUDMachine({
+        config: {
+          states: {
+            any: {},
           },
-          options: {
-            actions: {
-              [ACTIONS_CRUD.object.__assignRequest]: '' as any,
-            },
+        },
+        options: {
+          actions: {
+            [ACTIONS_CRUD.object.__assignRequest]: '' as any,
           },
-        }),
-      ).toThrow(ERRORS_STRING.object.actions_internal);
-    });
-  })();
+        },
+        status,
+      }),
+    ).toThrowError(ERRORS_STRING.object.no_checking);
+  });
 
-  (() => {
-    it(`Actions contains ${ACTIONS_CRUD.object.__increment} return error`, () => {
-      // const received = createCRUDMachine({});
-      expect(() =>
-        createCRUDMachine({
-          config: {
-            states: {
-              any: {},
-            },
+  it(`Actions contains ${ACTIONS_CRUD.object.__assignRequest} return error`, () => {
+    // const received = createCRUDMachine({});
+    expect(() =>
+      createCRUDMachine({
+        config: {
+          states: {
+            [STATES_COMMON_CRUD.object.checking]: {},
           },
-          options: {
-            actions: {
-              [ACTIONS_CRUD.object.__increment]: '' as any,
-            },
+        },
+        options: {
+          actions: {
+            [ACTIONS_CRUD.object.__assignRequest]: '' as any,
           },
-        }),
-      ).toThrow(ERRORS_STRING.object.actions_internal);
-    });
-  })();
+        },
+        status,
+      }),
+    ).toThrow(ERRORS_STRING.object.actions_internal);
+  });
+
+  it(`Actions contains ${ACTIONS_CRUD.object.__increment} return error`, () => {
+    // const received = createCRUDMachine({});
+    expect(() =>
+      createCRUDMachine({
+        config: {
+          states: {
+            [STATES_COMMON_CRUD.object.checking]: {},
+          },
+        },
+        options: {
+          actions: {
+            [ACTIONS_CRUD.object.__increment]: '' as any,
+          },
+        },
+        status,
+      }),
+    ).toThrow(ERRORS_STRING.object.actions_internal);
+  });
 
   it('it will give the good states', () => {
     const machine = createCRUDMachine({
       config: {
         states: {
-          any: {},
+          [STATES_COMMON_CRUD.object.checking]: {},
         },
       },
       options: {
@@ -126,10 +171,11 @@ describe('Existence', () => {
           act1: '() => {}' as any,
         },
       },
+      status,
     });
 
     const received = Object.keys(machine.states);
-    const expected = ['idle', 'any', ...STATESF_CRUD.array];
+    const expected = ['idle', 'checking', ...STATESF_CRUD.array];
     log('received', received);
     log('expected', expected);
 
@@ -140,7 +186,7 @@ describe('Existence', () => {
     const machine = createCRUDMachine({
       config: {
         states: {
-          any: {},
+          [STATES_COMMON_CRUD.object.checking]: {},
         },
       },
       options: {
@@ -149,6 +195,7 @@ describe('Existence', () => {
           act2: '() => {}' as any,
         },
       },
+      status,
     });
 
     const received = Object.keys(machine.options.actions);
@@ -157,22 +204,21 @@ describe('Existence', () => {
   });
 });
 
-const machine = createCRUDMachine({
-  config: {
-    initial: 'any',
-    states: {
-      any: {},
-    },
-  },
-  options: {
-    actions: {
-      act1: '() => {}' as any,
-      act2: '() => {}' as any,
-    },
-  },
-});
-
 describe("Machine's work", () => {
+  const machine = createCRUDMachine({
+    config: {
+      states: {
+        [STATES_COMMON_CRUD.object.checking]: {},
+      },
+    },
+    options: {
+      actions: {
+        act1: '() => {}' as any,
+        act2: '() => {}' as any,
+      },
+    },
+    status,
+  });
   ttestM({
     machine,
     events: ['SEND'],
