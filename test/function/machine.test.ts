@@ -79,7 +79,7 @@ describe('Existence', () => {
         },
         status,
       }),
-    ).toThrowError(ERRORS_STRING.object.initial);
+    ).toThrowError(ERRORS_STRING.object.initial_exists);
   });
 
   it(`Config contains context return error`, () => {
@@ -102,7 +102,7 @@ describe('Existence', () => {
     ).toThrowError(ERRORS_STRING.object.context_exits);
   });
 
-  it(`States not contains ${STATES_COMMON_CRUD.object.checking} return error`, () => {
+  it(`States not contains checking return error`, () => {
     // const received = createCRUDMachine({});
     expect(() =>
       createCRUDMachine({
@@ -121,7 +121,7 @@ describe('Existence', () => {
     ).toThrowError(ERRORS_STRING.object.no_checking);
   });
 
-  it(`Actions contains ${ACTIONS_CRUD.object.__assignRequest} return error`, () => {
+  it(`Actions contains __assignRequest return error`, () => {
     // const received = createCRUDMachine({});
     expect(() =>
       createCRUDMachine({
@@ -140,7 +140,7 @@ describe('Existence', () => {
     ).toThrow(ERRORS_STRING.object.actions_internal);
   });
 
-  it(`Actions contains ${ACTIONS_CRUD.object.__increment} return error`, () => {
+  it(`Actions contains __increment return error`, () => {
     // const received = createCRUDMachine({});
     expect(() =>
       createCRUDMachine({

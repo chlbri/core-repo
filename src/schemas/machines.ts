@@ -518,7 +518,7 @@ import { actionSchemaCRUD, stateSchemaCRUD } from './strings';
 export const configSChema = z.object({
   initial: z
     .undefined({
-      invalid_type_error: ERRORS_STRING.object.initial,
+      invalid_type_error: ERRORS_STRING.object.initial_exists,
     })
     .optional(),
   states: z

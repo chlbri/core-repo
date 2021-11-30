@@ -1,83 +1,151 @@
-import { getLiteralValues } from '../functions';
-import { errorSchema } from '../schemas/strings/error';
-import {
-  actionSchemaCRUD,
-  stateFSchemaCRUD,
-  stateSchemaCRUD,
-  statesCommonSchemaCRUD,
-} from '../schemas/strings/machines';
-import { FinalStates } from '../types/crud/config';
-
 export const xstate = 'xstate' as const;
 
-export const STATE_VALUES_CRUD = getLiteralValues(stateSchemaCRUD);
+export const STATE_VALUES_CRUD = {
+  object: {
+    idle: 'idle',
+    information: 'information',
+    success: 'success',
+    redirect: 'redirect',
+    client: 'client',
+    server: 'server',
+    permission: 'permission',
+    timeout: 'timeout',
+  },
+  array: [
+    'idle',
+    'information',
+    'success',
+    'redirect',
+    'client',
+    'server',
+    'permission',
+    'timeout',
+  ],
+} as const;
 
-export const STATESF_CRUD = getLiteralValues(stateFSchemaCRUD);
+export const STATESF_CRUD = {
+  object: {
+    information: 'information',
+    success: 'success',
+    redirect: 'redirect',
+    client: 'client',
+    server: 'server',
+    permission: 'permission',
+    timeout: 'timeout',
+  },
+  array: [
+    'information',
+    'success',
+    'redirect',
+    'client',
+    'server',
+    'permission',
+    'timeout',
+  ],
+} as const;
 
-export const ACTIONS_CRUD = getLiteralValues(actionSchemaCRUD);
+export const ACTIONS_CRUD = {
+  object: {
+    __increment: '__increment',
+    __assignRequest: '__assignRequest',
+    __information: '__information',
+    __success: '__success',
+    __redirect: '__redirect',
+    __client: '__client',
+    __server: '__server',
+    __permission: '__permission',
+    __timeout: '__timeout',
+  },
+  array: [
+    '__increment',
+    '__assignRequest',
+    '__information',
+    '__success',
+    '__redirect',
+    '__client',
+    '__server',
+    '__permission',
+    '__timeout',
+  ],
+} as const;
 
 export const STATE_CHECKING = 'checking' as const;
 
-function writeFinalState<S extends string>(str: S) {
-  return {
-    [str]: {
-      entry: [ACTIONS_CRUD.object.__increment],
-      type: 'final',
-    },
-  } as const;
-}
-
 export const STATES_FINAL = {
-  [STATESF_CRUD.object.information]: {
-    entry: [
-      ACTIONS_CRUD.object.__information,
-      ACTIONS_CRUD.object.__increment,
-    ],
+  information: {
+    entry: ['__information', '__increment'],
     type: 'final',
   },
-  [STATESF_CRUD.object.success]: {
-    entry: [
-      ACTIONS_CRUD.object.__success,
-      ACTIONS_CRUD.object.__increment,
-    ],
+  success: {
+    entry: ['__success', '__increment'],
     type: 'final',
   },
-  [STATESF_CRUD.object.redirect]: {
-    entry: [
-      ACTIONS_CRUD.object.__redirect,
-      ACTIONS_CRUD.object.__increment,
-    ],
+  redirect: {
+    entry: ['__redirect', '__increment'],
     type: 'final',
   },
-  [STATESF_CRUD.object.client]: {
-    entry: [ACTIONS_CRUD.object.__client, ACTIONS_CRUD.object.__increment],
+  client: {
+    entry: ['__client', '__increment'],
     type: 'final',
   },
-  [STATESF_CRUD.object.server]: {
-    entry: [ACTIONS_CRUD.object.__server, ACTIONS_CRUD.object.__increment],
+  server: {
+    entry: ['__server', '__increment'],
     type: 'final',
   },
-  [STATESF_CRUD.object.permission]: {
-    entry: [
-      ACTIONS_CRUD.object.__permission,
-      ACTIONS_CRUD.object.__increment,
-    ],
+  permission: {
+    entry: ['__permission', '__increment'],
     type: 'final',
   },
-  [STATESF_CRUD.object.timeout]: {
-    entry: [
-      ACTIONS_CRUD.object.__timeout,
-      ACTIONS_CRUD.object.__increment,
-    ],
+  timeout: {
+    entry: ['__timeout', '__increment'],
     type: 'final',
   },
 } as const;
 
-export const STATES_COMMON_CRUD = getLiteralValues(statesCommonSchemaCRUD); //?
+export const STATES_COMMON_CRUD = {
+  object: {
+    checking: 'checking',
+    empty_db: 'empty_db',
+    empty_ids: 'empty_ids',
+    empty_by_filters: 'empty_by_filters',
+    options_limit: 'options_limit',
+    check_options_limit: 'check_options_limit',
+    check_filters_limit: 'check_filters_limit',
+    no_options_limit: 'no_options_limit',
+    limit_reached: 'limit_reached',
+    filters_limit: 'filters_limit',
+  },
+  array: [
+    'checking',
+    'empty_db',
+    'empty_ids',
+    'empty_by_filters',
+    'options_limit',
+    'check_options_limit',
+    'check_filters_limit',
+    'no_options_limit',
+    'limit_reached',
+    'filters_limit',
+  ],
+} as const;
 
-export const ERRORS_STRING = getLiteralValues(errorSchema);
-
-
-const D = {
-  [STATES_COMMON_CRUD.object.checking]:'3'
-}
+export const ERRORS_STRING = {
+  object: {
+    no_machine_states: 'no_machine_states',
+    initial_exists: 'initial_exists',
+    empty_states: 'empty_states',
+    actions_internal: 'actions_internal',
+    states_internal: 'states_internal',
+    no_checking: 'no_checking',
+    context_exits: 'context_exits',
+  },
+  array: [
+    'no_machine_states',
+    'initial_exists',
+    'empty_states',
+    'actions_internal',
+    'states_internal',
+    'no_checking',
+    'context_exits',
+  ],
+} as const;
