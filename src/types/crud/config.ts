@@ -64,7 +64,7 @@ export type TC<C = any, E = any> = {
 
 export type States = TypeOf<typeof stateSchemaCRUD>;
 
-export type TE<E> = {
+export type TE<E = any> = {
   type: 'SEND';
   data?: E;
 };
@@ -143,7 +143,7 @@ export type DefaultActions<C = any, E = any> = Record<
 >;
 
 export type MachineConfigCRUD<C = any, E = any> = MachineConfig<
-  TC<C>,
+  TC<C, E>,
   any,
   TE<E>
 >;

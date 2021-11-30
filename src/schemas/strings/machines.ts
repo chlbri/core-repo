@@ -45,3 +45,23 @@ export const statesCommonSchemaCRUD = union([
   literal('limit_reached'),
   literal('filters_limit'),
 ]);
+
+export const errorSchema = union([
+  literal('no_machine_states'),
+  literal('initial_exists'),
+  literal('empty_states'),
+  literal('actions_internal'),
+  literal('states_internal'),
+  literal('no_checking'),
+  literal('context_exits'),
+]);
+
+export const crudStringSChema = union([
+  literal('createMany'),
+  literal('createOne'),
+  literal('empty_states'),
+  literal('actions_internal'),
+  literal('states_internal'),
+  literal('no_checking'),
+  literal('context_exits'),
+]);

@@ -47,4 +47,3 @@ export type SetOneById<E = any> = StateMachineCRUD<
     options?: NOmit<QueryOptions, 'limit'>;
   }
 >;
-

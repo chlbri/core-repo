@@ -20,214 +20,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.optionsSchema = exports.configSChema = void 0;
+const strings_1 = require("./../constants/strings");
 const z = __importStar(require("zod"));
-const strings_1 = require("../constants/strings");
-const strings_2 = require("./strings");
-// import { Behavior, StateValueMap, Subscribable } from 'xstate';
-// import * as z from 'zod';
-// import { ZodFunction } from 'zod';
-// import { stateSchemaCRUD } from '.';
-// import { xstate } from '../constants/strings';
-// import { convertObjectTo, convertObjectToArrayMask } from '../functions';
-// import { GetShape, Partialize } from '../types/zod';
-// export const actionTypeSchema = z.enum([
-//   `${xstate}.start`,
-//   `${xstate}.stop`,
-//   `${xstate}.raise`,
-//   `${xstate}.send`,
-//   `${xstate}.cancel`,
-//   '',
-//   `${xstate}.assign`,
-//   `${xstate}.after`,
-//   'done.state',
-//   'done.invoke',
-//   `${xstate}.log`,
-//   `${xstate}.init`,
-//   `${xstate}.invoke`,
-//   'log',
-//   'init',
-//   'invoke',
-//   `${xstate}.error`,
-//   `${xstate}.update`,
-//   `${xstate}.pure`,
-//   `${xstate}.choose`,
-// ]);
-// export const valueMapSchema: z.ZodSchema<StateValueMap> = z.lazy(() =>
-//   z.record(valueMapSchema),
-// );
-// export function singleOrArraySchema<S extends z.ZodTypeAny>(schema: S) {
-//   return z.union([schema, z.array(schema)]);
-// }
-// export function singleOrArrayObjectSchema<S extends z.ZodRawShape>(
-//   schema: z.ZodObject<S>,
-// ) {
-//   return z.union([schema, z.array(schema)]);
-// }
-// export function observerSchema<T extends z.ZodTypeAny>(value: T) {
-//   return z.object({
-//     next: z.function().args(value).returns(z.void()),
-//     error: z.function().args(z.any()).returns(z.void()).optional(),
-//     complete: z.function().returns(z.void()).optional(),
-//   }) as unknown as z.ZodObject<{
-//     next: z.ZodFunction<z.ZodTuple<[T]>, z.ZodVoid>;
-//     error: z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny]>, z.ZodVoid>>;
-//     complete: z.ZodOptional<z.ZodFunction<z.ZodTuple<[]>, z.ZodVoid>>;
-//   }>;
-// }
-// export const subscriptionSchema = z.function().returns(z.void());
-// export function subscribeSchema<T extends z.ZodTypeAny>(value: T) {
-//   const observer = observerSchema(value);
-//   return z.union([
-//     z
-//       .function()
-//       .args(
-//         observer.shape.next,
-//         observer.shape.error,
-//         observer.shape.complete,
-//       )
-//       .returns(subscriptionSchema),
-//     z.function().args(observer).returns(subscriptionSchema),
-//   ]);
-// }
-// // #region Conditions
-// export function condFunctionSchema<
-//   C extends z.ZodTypeAny,
-//   E extends z.ZodTypeAny,
-// >(context: C, event: E) {
-//   return z.function().args(context, event).returns(z.boolean());
-// }
-// export function conditionSchema<
-//   C extends z.ZodTypeAny,
-//   E extends z.ZodTypeAny,
-// >(context: C, event: E) {
-//   return singleOrArraySchema(condFunctionSchema(context, event))
-//     .or(singleOrArraySchema(z.string()))
-//     .optional();
-// }
-// // #endregion
-// // #region Actions
-// // #region Assigners
-// export function assignFunctionSchema<
-//   C extends z.AnyZodObject,
-//   E extends z.ZodTypeAny,
-// >(context: C, event: E) {
-//   const partial = context.partial();
-//   return (
-//     z
-//       .function()
-//       .args(context, event)
-//       .returns(partial) as unknown as z.ZodFunction<
-//       z.ZodTuple<[C, E]>,
-//       Partialize<C>
-//     >
-//   ).optional();
-// }
-// export function propertyAssignerSchema<
-//   C extends z.AnyZodObject,
-//   E extends z.ZodTypeAny,
-// >(context: C, event: E) {
-//   const preprocesseds = convertObjectToArrayMask<GetShape<C>>(
-//     context as any,
-//   );
-//   const processed = (preprocesseds as string[])
-//     .map(processed => ({
-//       [processed]: z
-//         .function()
-//         .args(context, event)
-//         .returns(context.shape[processed]),
-//     }))
-//     .reduce((acc, curr) => {
-//       Object.assign(acc, curr);
-//       return acc;
-//     }, {}) as unknown as {
-//     [key in keyof GetShape<C>]: z.ZodFunction<
-//       z.ZodTuple<[C, E]>,
-//       GetShape<C>[key]
-//     >;
-//   };
-//   const out = z.object(processed).partial();
-//   return out;
-// }
-// // #endregion
-// export function actionFunctionSchema<
-//   C extends z.ZodTypeAny,
-//   E extends z.ZodTypeAny,
-// >(context: C, event: E) {
-//   return (
-//     z
-//       .function()
-//       .args(context, event)
-//       .returns(z.void()) as unknown as z.ZodFunction<
-//       z.ZodTuple<[C, E]>,
-//       z.ZodVoid
-//     >
-//   ).optional();
-// }
-// export function actionSchema<
-//   C extends z.AnyZodObject,
-//   E extends z.ZodTypeAny,
-// >(context: C, event: E) {
-//   return singleOrArraySchema(propertyAssignerSchema(context, event))
-//     .or(singleOrArraySchema(z.string()))
-//     .or(singleOrArraySchema(assignFunctionSchema(context, event)))
-//     .or(singleOrArraySchema(actionFunctionSchema(context, event)))
-//     .optional();
-// }
-// export function chooseActionSchema<
-//   C extends z.ZodTypeAny,
-//   E extends z.ZodTypeAny,
-// >(context: C, event: E) {
-//   return z.object({
-//     cond: z
-//       .union([z.string(), condFunctionSchema(context, event)])
-//       .optional(),
-//     actions: singleOrArraySchema(
-//       z.union([z.string(), actionFunctionSchema(context, event)]),
-//     ),
-//   });
-// }
-// export function raiseActionSchema<L extends string>(literal: L) {
-//   return z.object({
-//     type: z.literal(actionTypeSchema.enum['xstate.raise']),
-//     event: eventSchema(literal),
-//   });
-// }
-// export function assignObjectSchema<
-//   C extends z.AnyZodObject,
-//   E extends z.ZodTypeAny,
-// >(context: C, event: E) {
-//   return z.object({
-//     type: z.literal(actionTypeSchema.enum['xstate.assign']),
-//     assignement: z.union([
-//       assignFunctionSchema(context, event),
-//       propertyAssignerSchema(context, event),
-//     ]),
-//   });
-// }
-// export function exprSchema<
-//   C extends z.ZodTypeAny,
-//   E extends z.ZodTypeAny,
-//   R extends z.ZodTypeAny = z.ZodTypeAny,
-// >(context: C, event: E, returns?: R) {
-//   return z
-//     .function()
-//     .args(context, event)
-//     .returns(returns ?? z.any());
-// }
-// export function logActionSchema<
-//   C extends z.ZodTypeAny,
-//   E extends z.ZodTypeAny,
-//   R extends z.ZodTypeAny = z.ZodTypeAny,
-// >(context: C, event: E, returns?: R) {
-//   return z.object({
-//     label: z.string().optional(),
-//     expr: z.union([z.string(), exprSchema(context, event, returns)]),
-//   });
-// }
-// export function senderSchema<E extends z.ZodTypeAny>(event: E) {
-//   return z.function().args(event).returns(z.void());
-// }
-// type ZodEventObject = z.ZodObject<{ type: z.ZodLiteral<string> }>;
+const strings_2 = require("../constants/strings");
+const strings_3 = require("./strings");
 // export function actorRefSchema<
 //   E extends z.ZodTypeAny,
 //   TE extends z.ZodTypeAny,
@@ -486,31 +282,44 @@ const strings_2 = require("./strings");
 //   });
 // }
 // // type Test = z.infer<typeof machineConfigSchema>;
-exports.configSChema = z.object({
+const configSChema = (context, event) => z.object({
+    id: z.string().optional(),
     initial: z
-        .undefined({
-        invalid_type_error: strings_1.ERRORS_STRING.object.initial,
+        .literal(strings_2.STATE_VALUES_CRUD.object.idle, {
+        invalid_type_error: strings_2.ERRORS_STRING.object.initial_exists,
     })
         .optional(),
     states: z
         .record(z.any(), {
-        required_error: strings_1.ERRORS_STRING.object.no_machine_states,
+        required_error: strings_2.ERRORS_STRING.object.no_machine_states,
     })
         .refine(record => Object.keys(record).length > 0, {
-        message: strings_1.ERRORS_STRING.object.empty_states,
+        message: strings_2.ERRORS_STRING.object.empty_states,
     })
-        .refine(record => Object.keys(record).some(key => !strings_2.stateSchemaCRUD.safeParse(key).success), { message: strings_1.ERRORS_STRING.object.states_internal })
-        .refine(record => Object.keys(record).some(key => key === strings_1.STATE_CHECKING), { message: strings_1.ERRORS_STRING.object.no_checking }),
+        .refine(record => Object.keys(record).some(key => !strings_3.stateSchemaCRUD.safeParse(key).success), { message: strings_2.ERRORS_STRING.object.states_internal })
+        .refine(record => Object.keys(record).some(key => key === strings_1.STATES_COMMON_CRUD.object.checking), { message: strings_2.ERRORS_STRING.object.no_checking }),
     context: z
-        .undefined({
-        invalid_type_error: strings_1.ERRORS_STRING.object.context_exits,
+        .object({
+        iterator: z.number(),
+        response: z.object({
+            status: z.custom(),
+            payload: context,
+            messages: z.array(z.string()).optional(),
+            notPermitteds: z.array(z.string()).optional(),
+        }),
+        request: z
+            .object({ type: z.literal('SEND'), data: event })
+            .optional(),
+    }, {
+        invalid_type_error: strings_2.ERRORS_STRING.object.context_exits,
     })
         .optional(),
 });
+exports.configSChema = configSChema;
 exports.optionsSchema = z
     .object({
     actions: z
         .record(z.any())
-        .refine(record => Object.keys(record).every(key => !strings_2.actionSchemaCRUD.safeParse(key).success), { message: strings_1.ERRORS_STRING.object.actions_internal }),
+        .refine(record => Object.keys(record).every(key => !strings_3.actionSchemaCRUD.safeParse(key).success), { message: strings_2.ERRORS_STRING.object.actions_internal }),
 })
     .partial();

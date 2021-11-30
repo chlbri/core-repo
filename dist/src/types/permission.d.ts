@@ -1,4 +1,4 @@
-import { StringKeyAndValues, UnionToIntersection } from 'core';
+import { StringKeyAndValues, UnionToIntersection } from '@core_chlbri/core';
 import { TypeOf } from 'zod';
 import { Entity } from '../entities';
 import { WithoutId } from './../entities';

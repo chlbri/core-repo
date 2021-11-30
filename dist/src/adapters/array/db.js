@@ -1,11 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ArrayCRUD_DB = void 0;
-/* eslint-disable @typescript-eslint/no-unused-vars */
+exports.readAll = exports.ArrayCRUD_DB = void 0;
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 const immer_1 = require("@xstate/immer");
 const immer_2 = require("immer");
-const strings_1 = require("../../constants/strings");
 const machine_1 = require("../../functions/machine");
 // type Permission<T extends Entity> = {
 //   permissionReader: PermissionsReaderOne<T>;
@@ -46,72 +44,72 @@ class ArrayCRUD_DB {
             config: {
                 id: 'readAll',
                 states: {
-                    [strings_1.STATES_COMMON_CRUD.object.checking]: {
+                    checking: {
                         always: [
                             {
-                                cond: this.isEmpty,
-                                target: strings_1.STATES_COMMON_CRUD.object.empty_db,
+                                cond: () => true,
+                                target: 'empty_db',
                             },
-                            strings_1.STATES_COMMON_CRUD.object.check_options_limit,
+                            'empty_db',
                         ],
                     },
-                    [strings_1.STATES_COMMON_CRUD.object.empty_db]: {
-                        entry: strings_1.ACTIONS_CRUD.object.__increment,
+                    empty_db: {
+                        entry: '__increment',
                         always: {
                             actions: (0, immer_1.assign)(({ response: { messages } }) => {
-                                messages = [strings_1.STATES_COMMON_CRUD.object.empty_db];
+                                messages = ['empty_db'];
                             }),
-                            target: strings_1.STATESF_CRUD.object.server,
+                            target: 'server',
                         },
                     },
-                    [strings_1.STATES_COMMON_CRUD.object.check_options_limit]: {
-                        entry: strings_1.ACTIONS_CRUD.object.__increment,
+                    check_options_limit: {
+                        entry: '__increment',
                         always: [
                             {
                                 cond: ({ request }) => { var _a; return !!((_a = request === null || request === void 0 ? void 0 : request.options) === null || _a === void 0 ? void 0 : _a.limit); },
-                                target: strings_1.STATES_COMMON_CRUD.object.options_limit,
+                                target: 'options_limit',
                             },
                             {
-                                target: strings_1.STATESF_CRUD.object.success,
+                                target: 'success',
                                 actions: (0, immer_1.assign)(({ response: { payload } }) => {
-                                    Object.assign(payload, this._db);
+                                    Object.assign(payload, []);
                                 }),
                             },
                         ],
                     },
-                    [strings_1.STATES_COMMON_CRUD.object.options_limit]: {
-                        initial: strings_1.STATE_VALUES_CRUD.object.idle,
+                    options_limit: {
+                        initial: 'idle',
                         states: {
                             idle: {
-                                entry: strings_1.ACTIONS_CRUD.object.__increment,
+                                entry: '__increment',
                                 always: [
                                     {
                                         cond: ({ request }) => {
                                             var _a;
                                             const limit = (_a = request === null || request === void 0 ? void 0 : request.options) === null || _a === void 0 ? void 0 : _a.limit;
-                                            return !!limit && limit < this._db.length;
+                                            return !!limit && limit < [].length;
                                         },
-                                        target: strings_1.STATES_COMMON_CRUD.object.limit_reached,
+                                        target: 'limit_reached',
                                     },
                                     {
-                                        target: `#readAll.${strings_1.STATESF_CRUD.object.information}`,
+                                        target: `#readAll.information`,
                                         actions: (0, immer_1.assign)(({ response: { messages, payload } }) => {
-                                            messages = [strings_1.STATES_COMMON_CRUD.object.options_limit];
-                                            Object.assign(payload, this._db);
+                                            messages = ['options_limit'];
+                                            Object.assign(payload, []);
                                         }),
                                     },
                                 ],
                             },
-                            [strings_1.STATES_COMMON_CRUD.object.limit_reached]: {
-                                entry: strings_1.ACTIONS_CRUD.object.__increment,
+                            limit_reached: {
+                                entry: '__increment',
                                 always: {
                                     actions: (0, immer_1.assign)(({ response: { payload, messages }, request }) => {
                                         var _a;
-                                        messages = [strings_1.STATES_COMMON_CRUD.object.limit_reached];
+                                        messages = ['limit_reached'];
                                         const limit = (_a = request === null || request === void 0 ? void 0 : request.options) === null || _a === void 0 ? void 0 : _a.limit;
-                                        Object.assign(payload, this._db.slice(0, limit));
+                                        Object.assign(payload, [].slice(0, limit));
                                     }),
-                                    target: `#readAll.${strings_1.STATESF_CRUD.object.redirect}`,
+                                    target: `#readAll.redirect`,
                                 },
                             },
                         },
@@ -133,3 +131,86 @@ class ArrayCRUD_DB {
     }
 }
 exports.ArrayCRUD_DB = ArrayCRUD_DB;
+const db = [];
+function readAll() {
+    return (0, machine_1.createCRUDMachine)({
+        config: {
+            id: 'readAll',
+            states: {
+                checking: {
+                    always: [
+                        {
+                            cond: () => db.length < 0,
+                            target: 'empty_db',
+                        },
+                        'empty_db',
+                    ],
+                },
+                empty_db: {
+                    entry: '__increment',
+                    always: {
+                        actions: (0, immer_1.assign)(({ response: { messages } }) => {
+                            messages = ['empty_db'];
+                        }),
+                        target: 'server',
+                    },
+                },
+                check_options_limit: {
+                    entry: '__increment',
+                    always: [
+                        {
+                            cond: ({ request }) => { var _a; return !!((_a = request === null || request === void 0 ? void 0 : request.options) === null || _a === void 0 ? void 0 : _a.limit); },
+                            target: 'options_limit',
+                        },
+                        {
+                            target: 'success',
+                            actions: (0, immer_1.assign)(({ response: { payload } }) => {
+                                Object.assign(payload, db);
+                            }),
+                        },
+                    ],
+                },
+                options_limit: {
+                    initial: 'idle',
+                    states: {
+                        idle: {
+                            entry: '__increment',
+                            always: [
+                                {
+                                    cond: ({ request }) => {
+                                        var _a;
+                                        const limit = (_a = request === null || request === void 0 ? void 0 : request.options) === null || _a === void 0 ? void 0 : _a.limit;
+                                        return !!limit && limit < db.length;
+                                    },
+                                    target: 'limit_reached',
+                                },
+                                {
+                                    target: `#readAll.information`,
+                                    actions: (0, immer_1.assign)(({ response: { messages, payload } }) => {
+                                        messages = ['options_limit'];
+                                        Object.assign(payload, []);
+                                    }),
+                                },
+                            ],
+                        },
+                        limit_reached: {
+                            entry: '__increment',
+                            always: {
+                                actions: (0, immer_1.assign)(({ response: { payload, messages }, request }) => {
+                                    var _a;
+                                    messages = ['limit_reached'];
+                                    const limit = (_a = request === null || request === void 0 ? void 0 : request.options) === null || _a === void 0 ? void 0 : _a.limit;
+                                    Object.assign(payload, db.slice(0, limit));
+                                }),
+                                target: `#readAll.redirect`,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        options: {},
+        status: 15,
+    });
+}
+exports.readAll = readAll;

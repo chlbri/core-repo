@@ -1,2 +1,2 @@
-export * from './machines'
-export * from './strings'
+export * from './machines';
+export * from './strings';

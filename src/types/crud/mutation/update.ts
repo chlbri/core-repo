@@ -1,10 +1,6 @@
 import { NOmit } from '@core_chlbri/core';
-import {  DSO } from '../../dso';
-import {
-  QueryOptions,
-  StateMachineCRUD,
-   WithoutDeepID,
-} from '../config';
+import { DSO } from '../../dso';
+import { QueryOptions, StateMachineCRUD, WithoutDeepID } from '../config';
 
 export type UpdateAll<E = any> = StateMachineCRUD<
   string[],

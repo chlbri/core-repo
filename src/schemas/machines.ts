@@ -1,6 +1,9 @@
+import { STATES_COMMON_CRUD } from './../constants/strings';
 import * as z from 'zod';
-import { ERRORS_STRING, STATE_CHECKING } from '../constants/strings';
+import { Status } from '../types/crud/status';
+import { ERRORS_STRING, STATE_VALUES_CRUD } from '../constants/strings';
 import { actionSchemaCRUD, stateSchemaCRUD } from './strings';
+import { MachineConfigCRUD } from '..';
 // import { Behavior, StateValueMap, Subscribable } from 'xstate';
 // import * as z from 'zod';
 // import { ZodFunction } from 'zod';
@@ -231,7 +234,7 @@ import { actionSchemaCRUD, stateSchemaCRUD } from './strings';
 //   return z.function().args(event).returns(z.void());
 // }
 
-// type ZodEventObject = z.ZodObject<{ type: z.ZodLiteral<string> }>;
+type ZodEventObject = z.ZodObject<{ type: z.ZodLiteral<string> }>;
 
 // export function actorRefSchema<
 //   E extends z.ZodTypeAny,
@@ -515,36 +518,61 @@ import { actionSchemaCRUD, stateSchemaCRUD } from './strings';
 
 // // type Test = z.infer<typeof machineConfigSchema>;
 
-export const configSChema = z.object({
-  initial: z
-    .undefined({
-      invalid_type_error: ERRORS_STRING.object.initial_exists,
-    })
-    .optional(),
-  states: z
-    .record(z.any(), {
-      required_error: ERRORS_STRING.object.no_machine_states,
-    })
-    .refine(record => Object.keys(record).length > 0, {
-      message: ERRORS_STRING.object.empty_states,
-    })
-    .refine(
-      record =>
-        Object.keys(record).some(
-          key => !stateSchemaCRUD.safeParse(key).success,
-        ),
-      { message: ERRORS_STRING.object.states_internal },
-    )
-    .refine(
-      record => Object.keys(record).some(key => key === STATE_CHECKING),
-      { message: ERRORS_STRING.object.no_checking },
-    ),
-  context: z
-    .undefined({
-      invalid_type_error: ERRORS_STRING.object.context_exits,
-    })
-    .optional(),
-});
+export const configSChema = <
+  C extends z.ZodTypeAny,
+  E extends z.ZodTypeAny,
+>(
+  context: C,
+  event: E,
+) =>
+  z.object({
+    id: z.string().optional(),
+    initial: z
+      .literal(STATE_VALUES_CRUD.object.idle, {
+        invalid_type_error: ERRORS_STRING.object.initial_exists,
+      })
+      .optional(),
+    states: z
+      .record(z.any(), {
+        required_error: ERRORS_STRING.object.no_machine_states,
+      })
+      .refine(record => Object.keys(record).length > 0, {
+        message: ERRORS_STRING.object.empty_states,
+      })
+      .refine(
+        record =>
+          Object.keys(record).some(
+            key => !stateSchemaCRUD.safeParse(key).success,
+          ),
+        { message: ERRORS_STRING.object.states_internal },
+      )
+      .refine(
+        record =>
+          Object.keys(record).some(
+            key => key === STATES_COMMON_CRUD.object.checking,
+          ),
+        { message: ERRORS_STRING.object.no_checking },
+      ),
+    context: z
+      .object(
+        {
+          iterator: z.number(),
+          response: z.object({
+            status: z.custom<Status>(),
+            payload: context,
+            messages: z.array(z.string()).optional(),
+            notPermitteds: z.array(z.string()).optional(),
+          }),
+          request: z
+            .object({ type: z.literal('SEND'), data: event })
+            .optional(),
+        },
+        {
+          invalid_type_error: ERRORS_STRING.object.context_exits,
+        },
+      )
+      .optional(),
+  }) as z.Schema<MachineConfigCRUD<z.infer<C>, z.infer<E>>>;
 
 export const optionsSchema = z
   .object({

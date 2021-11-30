@@ -1,6 +1,5 @@
 import { literal, tuple } from 'zod';
 
-
 export const PERMISSIONS_STRINGS = tuple([
   literal('__read'),
   literal('__write'),

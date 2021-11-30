@@ -1,5 +1,5 @@
 import type { TuplifyUnion, NExtract } from '@core_chlbri/core';
-import  {
+import {
   literal,
   object,
   TypeOf,

@@ -3,7 +3,9 @@ lockfileVersion: 5.3
 specifiers:
   '@core_chlbri/core': ^0.1.1-dc
   '@core_chlbri/test-machine': ^0.1.740
+  '@types/edit-json-file': ^1.6.1
   '@types/faker': ^5.5.9
+  '@types/fs-extra': ^9.0.13
   '@types/jest': ^27.0.2
   '@types/object.omit': ^3.0.0
   '@typescript-eslint/eslint-plugin': ^5.1.0
@@ -14,6 +16,7 @@ specifiers:
   edit-json-file: ^1.6.0
   eslint: ^8.0.1
   faker: ^5.5.3
+  fs-extra: ^10.0.0
   immer: ^9.0.6
   jest: ^27.3.0
   jest-cucumber: ^3.0.1
@@ -39,7 +42,9 @@ dependencies:
 
 devDependencies:
   '@core_chlbri/test-machine': 0.1.740_09b7e9df654b7428f04c4f9c49755fb3
+  '@types/edit-json-file': 1.6.1
   '@types/faker': 5.5.9
+  '@types/fs-extra': 9.0.13
   '@types/jest': 27.0.3
   '@types/object.omit': 3.0.0
   '@typescript-eslint/eslint-plugin': 5.4.0_5c8ff4cecd5a55e744866c0654edac32
@@ -49,6 +54,7 @@ devDependencies:
   edit-json-file: 1.6.2
   eslint: 8.3.0
   faker: 5.5.3
+  fs-extra: 10.0.0
   jest: 27.3.1
   jest-cucumber: 3.0.1
   jest-extended: 1.1.0
@@ -985,8 +991,20 @@ packages:
       '@babel/types': 7.16.0
     dev: true
 
+  /@types/edit-json-file/1.6.1:
+    resolution: {integrity: sha512-3zWmE5D8sr1EKW4q4MH58o1Jn/1yOj/EpsU+6ZSw6KerqzQvc1UxERW2xkDTvvf5jDc7ABx+9JTCaW40X5lCIQ==}
+    dependencies:
+      '@types/node': 16.11.10
+    dev: true
+
   /@types/faker/5.5.9:
     resolution: {integrity: sha512-uCx6mP3UY5SIO14XlspxsGjgaemrxpssJI0Ol+GfhxtcKpv9pgRZYsS4eeKeHVLje6Qtc8lGszuBI461+gVZBA==}
+    dev: true
+
+  /@types/fs-extra/9.0.13:
+    resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
+    dependencies:
+      '@types/node': 16.11.10
     dev: true
 
   /@types/glob/7.2.0:
@@ -2359,6 +2377,15 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       map-cache: 0.2.2
+    dev: true
+
+  /fs-extra/10.0.0:
+    resolution: {integrity: sha512-C5owb14u9eJwizKGdchcDUQeFtlSHHthBk8pbX9Vc1PFZrLombudjDnNns88aYslCyF6IY5SUw3Roz6xShcEIQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      graceful-fs: 4.2.8
+      jsonfile: 6.1.0
+      universalify: 2.0.0
     dev: true
 
   /fs.realpath/1.0.0:
@@ -3904,6 +3931,14 @@ packages:
       minimist: 1.2.5
     dev: true
 
+  /jsonfile/6.1.0:
+    resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
+    dependencies:
+      universalify: 2.0.0
+    optionalDependencies:
+      graceful-fs: 4.2.8
+    dev: true
+
   /kind-of/3.2.2:
     resolution: {integrity: sha1-MeohpzS6ubuw8yRm2JOupR5KPGQ=}
     engines: {node: '>=0.10.0'}
@@ -5157,6 +5192,11 @@ packages:
   /universalify/0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
+    dev: true
+
+  /universalify/2.0.0:
+    resolution: {integrity: sha512-hAZsKq7Yy11Zu1DE0OzWjw7nnLZmJZYTDZZyEFHZdUhV8FkH5MCfoU1XMaxXovpyW5nq5scPqq0ZDP9Zyl04oQ==}
+    engines: {node: '>= 10.0.0'}
     dev: true
 
   /unset-value/1.0.0:

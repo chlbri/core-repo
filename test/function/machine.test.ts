@@ -3,7 +3,6 @@ import {
   ERRORS_STRING,
   STATESF_CRUD,
   STATES_COMMON_CRUD,
-  STATE_CHECKING,
 } from '../../src/constants/strings';
 import { createCRUDMachine } from '../../src/functions/machine';
 import { generateSyncMachineTest as ttestM } from '@core_chlbri/test-machine';
@@ -66,7 +65,7 @@ describe('Existence', () => {
     expect(() =>
       createCRUDMachine({
         config: {
-          initial: 'idle',
+          initial: 'idledsdd',
           context: { iterator: 0, response: { status: 300 } },
           states: {
             any: {},
@@ -80,26 +79,6 @@ describe('Existence', () => {
         status,
       }),
     ).toThrowError(ERRORS_STRING.object.initial_exists);
-  });
-
-  it(`Config contains context return error`, () => {
-    // const received = createCRUDMachine({});
-    expect(() =>
-      createCRUDMachine({
-        config: {
-          context: { iterator: 0, response: { status: 300 } },
-          states: {
-            any: {},
-          },
-        },
-        options: {
-          actions: {
-            [ACTIONS_CRUD.object.__assignRequest]: '' as any,
-          },
-        },
-        status,
-      }),
-    ).toThrowError(ERRORS_STRING.object.context_exits);
   });
 
   it(`States not contains checking return error`, () => {

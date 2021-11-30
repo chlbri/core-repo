@@ -3,11 +3,9 @@ import {
   TypeOf,
   ZodBoolean,
   ZodLiteral,
-  ZodNull,
   ZodNumber,
   ZodObject,
   ZodOptional,
-  ZodRawShape,
   ZodTypeAny,
 } from 'zod';
 
@@ -26,9 +24,7 @@ export type GetShape<T extends AnyZodObject> = T extends ZodObject<{
 
 type Test1 = GetShape<ZodObject<{ data: ZodNumber; bol: ZodBoolean }>>;
 
-export type Partialize<
-  T extends AnyZodObject,
-> = ZodObject<{
+export type Partialize<T extends AnyZodObject> = ZodObject<{
   [key in keyof GetShape<T>]: ZodOptional<GetShape<T>[key]>;
 }>;
 

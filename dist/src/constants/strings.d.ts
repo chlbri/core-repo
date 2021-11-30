@@ -38,7 +38,6 @@ export declare const ACTIONS_CRUD: {
     };
     readonly array: ["__increment", "__assignRequest", "__information", "__success", "__redirect", "__client", "__server", "__permission", "__timeout"];
 };
-export declare const STATE_CHECKING: "checking";
 export declare const STATES_FINAL: {
     readonly information: {
         readonly entry: readonly ["__information", "__increment"];
@@ -87,12 +86,12 @@ export declare const STATES_COMMON_CRUD: {
 export declare const ERRORS_STRING: {
     readonly object: {
         no_machine_states: "no_machine_states";
-        initial: "initial";
+        initial_exists: "initial_exists";
         empty_states: "empty_states";
         actions_internal: "actions_internal";
         states_internal: "states_internal";
         no_checking: "no_checking";
         context_exits: "context_exits";
     };
-    readonly array: ["no_machine_states", "initial", "empty_states", "actions_internal", "states_internal", "no_checking", "context_exits"];
+    readonly array: ["no_machine_states", "initial_exists", "empty_states", "actions_internal", "states_internal", "no_checking", "context_exits"];
 };

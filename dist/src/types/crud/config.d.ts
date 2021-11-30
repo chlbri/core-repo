@@ -32,7 +32,7 @@ export declare type TC<C = any, E = any> = {
     iterator: number;
 } & ReqRes<C, E>;
 export declare type States = TypeOf<typeof stateSchemaCRUD>;
-export declare type TE<E> = {
+export declare type TE<E = any> = {
     type: 'SEND';
     data?: E;
 };
@@ -77,7 +77,7 @@ export declare type StateCommonCRUD = TypeOf<typeof statesCommonSchemaCRUD>;
 export declare type StateValueCRUDF = TypeOf<typeof stateFSchemaCRUD>;
 export declare type ActionFunctionCRUD<C = any, E = any> = ActionFunction<TC<C>, TE<E>>;
 export declare type DefaultActions<C = any, E = any> = Record<DefaultActionValueCRUD, AssignAction<TC<C, E>, TE<E>>>;
-export declare type MachineConfigCRUD<C = any, E = any> = MachineConfig<TC<C>, any, TE<E>>;
+export declare type MachineConfigCRUD<C = any, E = any> = MachineConfig<TC<C, E>, any, TE<E>>;
 export declare type MachineOptionsCRUD<C = any, E = any> = Partial<MachineOptions<TC<C>, TE<E>>>;
 export declare type MachineArgsCRUD<C = any, E = any> = {
     config: MachineConfigCRUD<C, E>;

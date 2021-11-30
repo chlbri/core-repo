@@ -45,7 +45,7 @@ describe('Existence', () => {
         // const received = createCRUDMachine({});
         expect(() => (0, machine_1.createCRUDMachine)({
             config: {
-                initial: 'idle',
+                initial: 'idledsdd',
                 context: { iterator: 0, response: { status: 300 } },
                 states: {
                     any: {},
@@ -57,26 +57,9 @@ describe('Existence', () => {
                 },
             },
             status,
-        })).toThrowError(strings_1.ERRORS_STRING.object.initial);
+        })).toThrowError(strings_1.ERRORS_STRING.object.initial_exists);
     });
-    it(`Config contains context return error`, () => {
-        // const received = createCRUDMachine({});
-        expect(() => (0, machine_1.createCRUDMachine)({
-            config: {
-                context: { iterator: 0, response: { status: 300 } },
-                states: {
-                    any: {},
-                },
-            },
-            options: {
-                actions: {
-                    [strings_1.ACTIONS_CRUD.object.__assignRequest]: '',
-                },
-            },
-            status,
-        })).toThrowError(strings_1.ERRORS_STRING.object.context_exits);
-    });
-    it(`States not contains ${strings_1.STATES_COMMON_CRUD.object.checking} return error`, () => {
+    it(`States not contains checking return error`, () => {
         // const received = createCRUDMachine({});
         expect(() => (0, machine_1.createCRUDMachine)({
             config: {
@@ -92,7 +75,7 @@ describe('Existence', () => {
             status,
         })).toThrowError(strings_1.ERRORS_STRING.object.no_checking);
     });
-    it(`Actions contains ${strings_1.ACTIONS_CRUD.object.__assignRequest} return error`, () => {
+    it(`Actions contains __assignRequest return error`, () => {
         // const received = createCRUDMachine({});
         expect(() => (0, machine_1.createCRUDMachine)({
             config: {
@@ -108,7 +91,7 @@ describe('Existence', () => {
             status,
         })).toThrow(strings_1.ERRORS_STRING.object.actions_internal);
     });
-    it(`Actions contains ${strings_1.ACTIONS_CRUD.object.__increment} return error`, () => {
+    it(`Actions contains __increment return error`, () => {
         // const received = createCRUDMachine({});
         expect(() => (0, machine_1.createCRUDMachine)({
             config: {

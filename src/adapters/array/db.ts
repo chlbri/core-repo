@@ -9,7 +9,7 @@ import { CreateMany, ReadAll, WithoutDeepID } from '../../types/crud';
 //   permissionReader: PermissionsReaderOne<T>;
 // };
 
-export class ArrayCRUD_DB<E extends Entity> /* implements CRUD<E> */ {
+export class ArrayCRUD_DB<E extends Entity> {
   /* , Permission<T> */
   constructor(
     private _db: WithoutDeepID<E>[],
