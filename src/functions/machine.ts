@@ -3,7 +3,7 @@ import produce from 'immer';
 import { createMachine } from 'xstate';
 import * as z from 'zod';
 import { STATES_FINAL } from '../constants/strings';
-import { configSChema, optionsSchema } from '../schemas/machines';
+import { configSchema, optionsSchema } from '../schemas/machines';
 import { Status } from '../types/crud';
 import { MachineArgsCRUD, StateMachineCRUD } from '../types/crud/config';
 import {
@@ -19,7 +19,6 @@ export function createCRUDMachine<C = any, E = any>({
   status,
 }: MachineArgsCRUD<C, E>): StateMachineCRUD<C, E> {
   const __states = config.states;
-  const _configSchema = configSChema(z.custom<C>(), z.custom<E>());
 
   // if (!__states) {
   //   throw ERRORS_STRING.object.no_machine_states;
@@ -66,26 +65,27 @@ export function createCRUDMachine<C = any, E = any>({
   //   }
   // }
 
-  config.context = {
+  const _config = configSchema.parse(config);
+
+  _config.initial = STATE_VALUES_CRUD.object.idle;
+
+  _config.states = {
+    idle: {
+      on: {
+        SEND: {
+          actions: ACTIONS_CRUD.object.__assignRequest,
+          target: STATES_COMMON_CRUD.object.checking,
+        },
+      },
+    },
+    ...__states,
+  };
+  Object.assign(_config.states, STATES_FINAL);
+
+  _config.context = {
     iterator: 0,
     response: { status: (500 + status) as Status },
   };
-
-  const _config = produce(_configSchema.parse(config), draft => {
-    draft.initial = STATE_VALUES_CRUD.object.idle;
-    draft.states = {
-      idle: {
-        on: {
-          SEND: {
-            actions: ACTIONS_CRUD.object.__assignRequest,
-            target: STATES_COMMON_CRUD.object.checking,
-          },
-        },
-      },
-      ...__states,
-    };
-    Object.assign(draft.states, STATES_FINAL);
-  });
 
   const _options: MachineArgsCRUD<C, E>['options'] = produce(
     optionsSchema.parse(options),

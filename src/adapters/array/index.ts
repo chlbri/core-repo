@@ -1,2 +1,4 @@
 export * from './db';
-export * from './resolvers';
+export * from './resolver';
+// export * from './mutation';
+export * from './query';

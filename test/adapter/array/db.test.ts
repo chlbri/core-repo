@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { log } from '@core_chlbri/core';
 import { generateSyncMachineTest as ttestM } from '@core_chlbri/test-machine';
-import { readAll } from '../../../src/adapters/array/db';
+import { readAll } from '../../../src/adapters/array/query/read';
 
 describe('Create', () => {});
 

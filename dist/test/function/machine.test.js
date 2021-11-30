@@ -41,12 +41,29 @@ describe('Existence', () => {
             status,
         })).toThrow(strings_1.ERRORS_STRING.object.states_internal);
     });
+    it(`Config contains context return error`, () => {
+        // const received = createCRUDMachine({});
+        expect(() => (0, machine_1.createCRUDMachine)({
+            config: {
+                initial: 'idle',
+                context: { iterator: 0, response: { status: 300 } },
+                states: {
+                    any: {},
+                },
+            },
+            options: {
+                actions: {
+                    [strings_1.ACTIONS_CRUD.object.__assignRequest]: '',
+                },
+            },
+            status,
+        })).toThrowError(strings_1.ERRORS_STRING.object.context_exits);
+    });
     it(`Config contains initial return error`, () => {
         // const received = createCRUDMachine({});
         expect(() => (0, machine_1.createCRUDMachine)({
             config: {
                 initial: 'idledsdd',
-                context: { iterator: 0, response: { status: 300 } },
                 states: {
                     any: {},
                 },

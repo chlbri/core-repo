@@ -1,23 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -26,14 +7,12 @@ exports.createCRUDMachine = void 0;
 const core_1 = require("@core_chlbri/core");
 const immer_1 = __importDefault(require("immer"));
 const xstate_1 = require("xstate");
-const z = __importStar(require("zod"));
 const strings_1 = require("../constants/strings");
 const machines_1 = require("../schemas/machines");
 const strings_2 = require("./../constants/strings");
 const helpers_1 = require("./helpers");
 function createCRUDMachine({ config, options, status, }) {
     const __states = config.states;
-    const _configSchema = (0, machines_1.configSChema)(z.custom(), z.custom());
     // if (!__states) {
     //   throw ERRORS_STRING.object.no_machine_states;
     // }
@@ -68,25 +47,24 @@ function createCRUDMachine({ config, options, status, }) {
     //     if (nocheck7) throw ERRORS_STRING.object.actions_internal;
     //   }
     // }
-    config.context = {
+    const _config = machines_1.configSchema.parse(config);
+    _config.initial = strings_2.STATE_VALUES_CRUD.object.idle;
+    _config.states = {
+        idle: {
+            on: {
+                SEND: {
+                    actions: strings_2.ACTIONS_CRUD.object.__assignRequest,
+                    target: strings_2.STATES_COMMON_CRUD.object.checking,
+                },
+            },
+        },
+        ...__states,
+    };
+    Object.assign(_config.states, strings_1.STATES_FINAL);
+    _config.context = {
         iterator: 0,
         response: { status: (500 + status) },
     };
-    const _config = (0, immer_1.default)(_configSchema.parse(config), draft => {
-        draft.initial = strings_2.STATE_VALUES_CRUD.object.idle;
-        draft.states = {
-            idle: {
-                on: {
-                    SEND: {
-                        actions: strings_2.ACTIONS_CRUD.object.__assignRequest,
-                        target: strings_2.STATES_COMMON_CRUD.object.checking,
-                    },
-                },
-            },
-            ...__states,
-        };
-        Object.assign(draft.states, strings_1.STATES_FINAL);
-    });
     const _options = (0, immer_1.default)(machines_1.optionsSchema.parse(options), draft => {
         if (draft === null || draft === void 0 ? void 0 : draft.actions) {
             Object.assign(draft.actions, {

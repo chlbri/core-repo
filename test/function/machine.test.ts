@@ -60,13 +60,32 @@ describe('Existence', () => {
     ).toThrow(ERRORS_STRING.object.states_internal);
   });
 
+  it(`Config contains context return error`, () => {
+    // const received = createCRUDMachine({});
+    expect(() =>
+      createCRUDMachine({
+        config: {
+          initial: 'idle',
+          context: { iterator: 0, response: { status: 300 } },
+          states: {
+            any: {},
+          },
+        },
+        options: {
+          actions: {
+            [ACTIONS_CRUD.object.__assignRequest]: '' as any,
+          },
+        },
+        status,
+      }),
+    ).toThrowError(ERRORS_STRING.object.context_exits);
+  });
   it(`Config contains initial return error`, () => {
     // const received = createCRUDMachine({});
     expect(() =>
       createCRUDMachine({
         config: {
           initial: 'idledsdd',
-          context: { iterator: 0, response: { status: 300 } },
           states: {
             any: {},
           },

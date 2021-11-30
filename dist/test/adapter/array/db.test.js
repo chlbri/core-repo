@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const test_machine_1 = require("@core_chlbri/test-machine");
-const db_1 = require("../../../src/adapters/array/db");
+const read_1 = require("../../../src/adapters/array/query/read");
 describe('Create', () => { });
 describe('Read', () => {
-    const machine = (0, db_1.readAll)();
+    const machine = (0, read_1.readAll)();
     (0, test_machine_1.generateSyncMachineTest)({
         invite: 'ReadAll',
         machine,
