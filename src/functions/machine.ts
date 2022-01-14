@@ -70,7 +70,7 @@ export function createCRUDMachine<C = any, E = any>({
   _config.initial = STATE_VALUES_CRUD.object.idle;
 
   _config.states = {
-    idle: {
+    [STATE_VALUES_CRUD.object.idle]: {
       on: {
         SEND: {
           actions: ACTIONS_CRUD.object.__assignRequest,
@@ -90,6 +90,7 @@ export function createCRUDMachine<C = any, E = any>({
   const _options: MachineArgsCRUD<C, E>['options'] = produce(
     optionsSchema.parse(options),
     draft => {
+      if (!draft) return;
       if (draft?.actions) {
         Object.assign(draft.actions, {
           ...draft.actions,
@@ -103,6 +104,10 @@ export function createCRUDMachine<C = any, E = any>({
   );
 
   log('id', _config.id);
+  [].forEach
 
-  return createMachine(_config, _options);
+  return createMachine(_config, {
+    ..._options,
+    actions: generateDefaultActions<C, E>(status),
+  });
 }

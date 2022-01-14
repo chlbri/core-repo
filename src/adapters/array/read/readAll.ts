@@ -11,12 +11,16 @@ export function readAll<E extends Entity = Entity>(): ReadAll<E> {
       id: 'readAll',
       states: {
         checking: {
+          entry: '__increment',
           always: [
             {
-              cond: () => db.length < 0,
+              cond: () => db.length === 0,
               target: 'empty_db',
+              actions: () => {
+                console.log('okkk');
+              },
             },
-            'empty_db',
+            'check_options_limit',
           ],
         },
         empty_db: {
