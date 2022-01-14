@@ -134,8 +134,9 @@ export function inStreamSearchAdapterKey<T>(
 }
 
 export function inStreamSearchAdapter<T>(
-  filter: DataSearchOperations<T>,
+  filter?: DataSearchOperations<T>,
 ): (val: any) => boolean {
+  if (!filter) return () => true;
   const funcs: ((arg: T) => boolean)[] = [];
 
   if (isNotClause(filter)) {

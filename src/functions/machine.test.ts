@@ -3,8 +3,8 @@ import {
   ERRORS_STRING,
   STATESF_CRUD,
   STATES_COMMON_CRUD,
-} from '../../src/constants/strings';
-import { createCRUDMachine } from '../../src/functions/machine';
+} from '../constants/strings';
+import { createCRUDMachine } from './machine';
 import { generateSyncMachineTest as ttestM } from '@core_chlbri/test-machine';
 import { log } from '@core_chlbri/core';
 
@@ -66,7 +66,10 @@ describe('Existence', () => {
       createCRUDMachine({
         config: {
           initial: 'idle',
-          context: { iterator: 0, response: { status: 300 } },
+          context: {
+            iterator: 0,
+            response: { status: 300, messages: [], notPermitteds: [] },
+          },
           states: {
             any: {},
           },
@@ -221,7 +224,7 @@ describe("Machine's work", () => {
     machine,
     events: ['SEND'],
     invite: 'Test1',
-    tests: [{ value: 'idle' }],
+    tests: [{ value: 'idle' }, { value: 'checking' }],
   });
   ttestM({
     machine,
@@ -236,6 +239,6 @@ describe("Machine's work", () => {
       'SEND',
     ],
     invite: 'Test2',
-    tests: [{ value: 'idle' }],
+    tests: [{ value: 'idle' }, { value: 'checking' }],
   });
 });

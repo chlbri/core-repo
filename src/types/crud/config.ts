@@ -4,6 +4,9 @@ import {
   NExtract,
   NOmit,
   StringKeys,
+  Undefiny,
+  NotSubType,
+  Primitive,
 } from '@core_chlbri/core';
 import {
   ActionFunction,
@@ -49,8 +52,8 @@ export type WithoutDeepID<T> = WithoutId<DP<T>>;
 export type Response<T> = {
   status: Status;
   payload?: DeepPartial<T>;
-  messages?: string[];
-  notPermitteds?: string[];
+  messages: string[];
+  notPermitteds: string[];
 };
 
 export type ReqRes<C = any, E = any> = {
@@ -64,7 +67,13 @@ export type TC<C = any, E = any> = {
 
 export type States = TypeOf<typeof stateSchemaCRUD>;
 
-export type TE<E = any> = {
+type EventData<T> = T extends Primitive
+  ? T
+  : NotSubType<T, undefined> extends Record<string, never>
+  ? T | undefined
+  : T;
+
+export type TE<E = any> ={
   type: 'SEND';
   data?: E;
 };

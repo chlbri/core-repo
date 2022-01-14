@@ -84,30 +84,27 @@ export function createCRUDMachine<C = any, E = any>({
 
   _config.context = {
     iterator: 0,
-    response: { status: (500 + status) as Status },
+    response: {
+      status: (500 + status) as Status,
+      messages: [],
+      notPermitteds: [],
+    },
   };
 
   const _options: MachineArgsCRUD<C, E>['options'] = produce(
     optionsSchema.parse(options),
     draft => {
       if (!draft) return;
-      if (draft?.actions) {
-        Object.assign(draft.actions, {
+      Object.assign(draft, {
+        actions: {
           ...draft.actions,
           ...generateDefaultActions<C, E>(status),
-        });
-      } else
-        Object.assign(draft, {
-          actions: generateDefaultActions<C, E>(status),
-        });
+        },
+      });
     },
   );
 
   log('id', _config.id);
-  [].forEach
 
-  return createMachine(_config, {
-    ..._options,
-    actions: generateDefaultActions<C, E>(status),
-  });
+  return createMachine(_config, _options);
 }

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Entity } from '../../entities';
-import { WithoutDeepID } from '../../types/crud';
+import { WithDeepID } from '../../types/crud';
 
-export const db: WithoutDeepID<Entity>[] = [];
+export const db: WithDeepID<Entity>[] = [];
