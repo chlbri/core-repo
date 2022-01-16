@@ -73,7 +73,7 @@ type EventData<T> = T extends Primitive
   ? T | undefined
   : T;
 
-export type TE<E = any> ={
+export type TE<E = any> = {
   type: 'SEND';
   data?: E;
 };

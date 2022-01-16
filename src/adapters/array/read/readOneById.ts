@@ -2,11 +2,12 @@
 import { assign } from '@xstate/immer';
 import { Entity } from '../../../entities';
 import { createCRUDMachine } from '../../../functions/machine';
-import { ReadOneById } from '../../../types';
-import { db } from '../db';
+import { ReadOneById, WithDeepID } from '../../../types';
 import { inStreamSearchAdapter } from '../resolver';
 
-export function readOneById<E extends Entity = Entity>(): ReadOneById<E> {
+export function readOneById<E extends Entity = Entity>(
+  db: WithDeepID<E>[] = [],
+): ReadOneById<E> {
   return createCRUDMachine({
     config: {
       id: 'readOneById',

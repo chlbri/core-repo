@@ -17,7 +17,7 @@ export const STATESF_CRUD = getLiteralValues(stateFSchemaCRUD);
 
 export const ACTIONS_CRUD = getLiteralValues(actionSchemaCRUD);
 
-export const STATES_FINAL = {
+export const QUANTIC_STATES = {
   information: {
     entry: [
       ACTIONS_CRUD.object.__information,

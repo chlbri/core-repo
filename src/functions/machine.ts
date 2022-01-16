@@ -2,7 +2,7 @@ import { log } from '@core_chlbri/core';
 import produce from 'immer';
 import { createMachine } from 'xstate';
 import * as z from 'zod';
-import { STATES_FINAL } from '../constants/strings';
+import { QUANTIC_STATES } from '../constants/strings';
 import { configSchema, optionsSchema } from '../schemas/machines';
 import { Status } from '../types/crud';
 import { MachineArgsCRUD, StateMachineCRUD } from '../types/crud/config';
@@ -80,7 +80,7 @@ export function createCRUDMachine<C = any, E = any>({
     },
     ...__states,
   };
-  Object.assign(_config.states, STATES_FINAL);
+  Object.assign(_config.states, QUANTIC_STATES);
 
   _config.context = {
     iterator: 0,

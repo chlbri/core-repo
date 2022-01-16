@@ -2,11 +2,12 @@
 import { assign } from '@xstate/immer';
 import { Entity } from '../../../entities';
 import { createCRUDMachine } from '../../../functions/machine';
-import { Count } from '../../../types';
-import { db } from '../db';
+import { Count, WithDeepID } from '../../../types';
 import { inStreamSearchAdapter } from '../resolver';
 
-export function count<E extends Entity = Entity>(): Count<E> {
+export function count<E extends Entity = Entity>(
+  db: WithDeepID<E>[] = [],
+): Count<E> {
   return createCRUDMachine({
     config: {
       id: 'count',

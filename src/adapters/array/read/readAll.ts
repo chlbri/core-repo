@@ -2,10 +2,11 @@
 import { assign } from '@xstate/immer';
 import { Entity } from '../../../entities';
 import { createCRUDMachine } from '../../../functions/machine';
-import { ReadAll } from '../../../types';
-import { db } from '../db';
+import { ReadAll, WithDeepID } from '../../../types';
 
-export function readAll<E extends Entity = Entity>(): ReadAll<E> {
+export function readAll<E extends Entity = Entity>(
+  db: WithDeepID<E>[] = [],
+): ReadAll<E> {
   return createCRUDMachine({
     config: {
       id: 'readAll',

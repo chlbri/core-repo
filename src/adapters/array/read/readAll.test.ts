@@ -1,6 +1,6 @@
-import { readAll } from "./readAll";
+import { readAll } from './readAll';
 import { generateSyncMachineTest as ttestM } from '@core_chlbri/test-machine';
-import { db } from "../db";
+import { db } from '../db';
 
 const machine = readAll();
 ttestM({
