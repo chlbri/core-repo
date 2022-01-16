@@ -70,7 +70,7 @@ export function countAll(db: WithDeepID<Entity>[] = []): CountAll {
           always: [
             {
               cond: IDS.guards.optionsIsDefined,
-              target: IDS.states.options
+              target: IDS.states.options,
             },
             {
               target: IDS.states.success,
@@ -164,14 +164,3 @@ export function countAll(db: WithDeepID<Entity>[] = []): CountAll {
     status: 15,
   });
 }
-
-type StatesSChema = {
-  initial: {};
-  loading: {
-    states: {
-      checkOne: {};
-      checkTwo: {};
-    };
-  };
-  final: {};
-};

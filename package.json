@@ -27,7 +27,7 @@
     "git-publish": "yarn build && publish"
   },
   "devDependencies": {
-    "@core_chlbri/test-machine": "^0.1.83",
+    "@core_chlbri/test-machine": "0.1.84",
     "@types/edit-json-file": "^1.6.1",
     "@types/faker": "^5.5.9",
     "@types/fs-extra": "^9.0.13",
